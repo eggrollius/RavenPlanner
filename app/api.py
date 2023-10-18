@@ -6,7 +6,7 @@ from app import db
 from sqlalchemy.exc import IntegrityError #excpetion
 
 api = Blueprint('api', __name__)
-
+#create a new course
 @api.route('/course', methods=['POST'])
 def add_course():
     data = request.get_json()
@@ -43,7 +43,7 @@ def add_course():
         db.session.rollback();
         return jsonify({'message': 'CRN already exists, duplicate'}); 
 
-
+#get all courses
 @api.route('/courses', methods=['GET'])
 def get_courses():
     course_list = Course.query.all()
@@ -76,7 +76,43 @@ def get_courses():
 
     return jsonify({'courses': courses})
 
+#Search courses by name
+@api.route('/course/search', methods=['GET'])
+def search_course():
+    query = request.args.get('query', '')
+    courses = Course.query.filter(Course.course_name.like(f'%{query}%')).all()
 
+    course_list = []
+    for course in courses:
+        meeting_infos = []
+        for meeting_info in course.meeting_infos:
+            meeting_infos.append({
+                'meeting_date': meeting_info.meeting_date,
+                'days': meeting_info.days,
+                'time': meeting_info.time,
+                'building': meeting_info.building,
+                'room': meeting_info.room
+            })
+
+        course_list.append({
+            'id': course.id,
+            'registration_status': course.registration_status,
+            'crn': course.crn,
+            'course_code': course.course_code,
+            'section': course.section,
+            'course_name': course.course_name,
+            'credits': course.credits,
+            'type': course.type,
+            'instructor': course.instructor,
+            'also_register_in': course.also_register_in,
+            'meeting_infos': meeting_infos
+        })
+
+    return jsonify({'courses': course_list})
+
+
+
+#update course
 @api.route('/course/<id>', methods=['PUT'])
 def update_course(id):
     course = Course.query.get(id)
