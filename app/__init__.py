@@ -17,6 +17,7 @@ def create_app():
     if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     
     db.init_app(app)
     migrate.init_app(app, db)
