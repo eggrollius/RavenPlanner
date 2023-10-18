@@ -80,7 +80,7 @@ def get_courses():
 @api.route('/course/search', methods=['GET'])
 def search_course():
     query = request.args.get('query', '')
-    courses = Course.query.filter(Course.course_name.like(f'%{query}%')).all()
+    courses = Course.query.filter(Course.course_code.ilike(f'%{query}%')).all()
 
     course_list = []
     for course in courses:
@@ -109,8 +109,6 @@ def search_course():
         })
 
     return jsonify({'courses': course_list})
-
-
 
 #update course
 @api.route('/course/<id>', methods=['PUT'])
