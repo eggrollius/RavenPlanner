@@ -105,9 +105,13 @@ def delete_course_by_crn(crn):
     if not course:
         return jsonify({'message': 'Course not found'})
 
+    # Delete all related MeetingInfo entries
+    MeetingInfo.query.filter_by(course_id=course.id).delete()
+
     db.session.delete(course)
     db.session.commit()
     return jsonify({'message': 'Course deleted'})
+
 
 #delete by primary key(id)
 @api.route('/course/<id>', methods=['DELETE'])
@@ -115,7 +119,10 @@ def delete_course(id):
     course = Course.query.get(id)
     if not course:
         return jsonify({'message': 'Course not found'})
-        
+
+    # Delete all related MeetingInfo entries
+    MeetingInfo.query.filter_by(course_id=course.id).delete()
+
     db.session.delete(course)
     db.session.commit()
     return jsonify({'message': 'Course deleted'})
