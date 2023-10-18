@@ -98,7 +98,18 @@ def update_course(id):
     db.session.commit()
     return jsonify({'message': 'Course updated'})
 
+#delete by unique CRN
+@api.route('/course/crn/<crn>', methods=['DELETE'])
+def delete_course_by_crn(crn):
+    course = Course.query.filter_by(crn=crn).first()
+    if not course:
+        return jsonify({'message': 'Course not found'})
 
+    db.session.delete(course)
+    db.session.commit()
+    return jsonify({'message': 'Course deleted'})
+
+#delete by primary key(id)
 @api.route('/course/<id>', methods=['DELETE'])
 def delete_course(id):
     course = Course.query.get(id)
