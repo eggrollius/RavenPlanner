@@ -76,7 +76,7 @@ def get_courses():
 
     return jsonify({'courses': courses})
 
-"""
+
 @api.route('/course/<id>', methods=['PUT'])
 def update_course(id):
     course = Course.query.get(id)
@@ -84,10 +84,20 @@ def update_course(id):
         return jsonify({'message': 'Course not found'})
         
     data = request.get_json()
+
     course.registration_status = data['registration_status']
-    #... other fields
+    course.crn = data['crn']
+    course.course_code = data['course_code']
+    course.section = data['section']
+    course.course_name = data['course_name']
+    course.credits = data['credits']
+    course.type = data['type']
+    course.instructor = data['instructor']
+    course.also_register_in = data['also_register_in']
+
     db.session.commit()
     return jsonify({'message': 'Course updated'})
+
 
 @api.route('/course/<id>', methods=['DELETE'])
 def delete_course(id):
@@ -98,5 +108,3 @@ def delete_course(id):
     db.session.delete(course)
     db.session.commit()
     return jsonify({'message': 'Course deleted'})
-
-"""
