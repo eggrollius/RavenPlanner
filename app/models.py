@@ -11,7 +11,8 @@ class Course(db.Model):
     type = db.Column(db.String(50))  # Can be 'Lecture', 'Tutorial', 'Lab' etc.
     instructor = db.Column(db.String(255))
     also_register_in = db.Column(db.String(255))  # To specify the additional courses or sections like "COMP 1406 B1 or B2"
-
+    meeting_infos = db.relationship('MeetingInfo', backref='course', lazy=True, cascade="all, delete-orphan")
+    
 class MeetingInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
