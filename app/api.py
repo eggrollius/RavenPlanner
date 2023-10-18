@@ -3,6 +3,8 @@ from app.models import Course
 from app.models import MeetingInfo
 from app import db
 
+from sqlalchemy.exc import IntegrityError #excpetion
+
 api = Blueprint('api', __name__)
 
 @api.route('/course', methods=['POST'])
@@ -33,9 +35,13 @@ def add_course():
             room=meeting_info['room']
         )
         db.session.add(new_meeting_info)
-
-    db.session.commit()
-    return jsonify({'message': 'New course added'})
+    try:
+        db.session.commit()
+        return jsonify({'message': 'New course added'})
+    except IntegrityError:
+        #handle duplicate records
+        db.session.rollback();
+        return jsonify({'message': 'CRN already exists, duplicate'}); 
 
 
 @api.route('/courses', methods=['GET'])
