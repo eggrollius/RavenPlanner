@@ -2,14 +2,18 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-db = SQLAlchemy()
+app = Flask(__name__)
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+# Configure database
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///site.db'
+db = SQLAlchemy(app)
 
-    db.init_app(app)
+# Import models
+from models import Course, MeetingInfo
 
-    # other initializations and blueprint registrations
+@app.route("/")
+def index():
+    return "Hello, World!"
 
-    return app
+if __name__ == "__main__":
+    app.run()

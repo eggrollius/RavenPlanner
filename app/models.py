@@ -8,11 +8,9 @@ class Course(db.Model):
     section = db.Column(db.String(50))
     course_name = db.Column(db.String(255))
     credits = db.Column(db.Float)
-    type = db.Column(db.String(50))
-    lab_required = db.Column(db.Boolean)
-    tutorial_required = db.Column(db.Boolean)
+    type = db.Column(db.String(50))  # Can be 'Lecture', 'Tutorial', 'Lab' etc.
     instructor = db.Column(db.String(255))
-    # Add any other fields here
+    also_register_in = db.Column(db.String(255))  # To specify the additional courses or sections like "COMP 1406 B1 or B2"
 
 class MeetingInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,10 +20,3 @@ class MeetingInfo(db.Model):
     time = db.Column(db.String(50))
     building = db.Column(db.String(50))
     room = db.Column(db.String(50))
-
-class SectionInfo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
-    section_type = db.Column(db.String(50))
-    notes = db.Column(db.Text)
-    # Add any other fields here
