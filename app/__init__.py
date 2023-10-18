@@ -23,7 +23,9 @@ def create_app():
     migrate.init_app(app, db)
 
     from .models import Course, MeetingInfo
-
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix='/api')
+    
     @app.route("/")
     def index():
         return "Hello, World!"
