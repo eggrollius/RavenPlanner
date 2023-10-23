@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Raven Planner</title>
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto Slab' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="static\index.css">
+    <script src="static\index.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <h1>Raven Planner</h1>
+    </header>
+
+    <nav>
+        <!-- Navigation links go here -->
+    </nav>
+
+    <nav>
+        <!-- Navigation links can go here -->
+    </nav>
+
+    <main>
+        <section id="course-selection">
+            <h2>Pick Your Courses</h2>
+
+            <form id="course-form">
+                <!-- Dropdown for selecting the department -->
+                <label for="department">Choose a Department:</label>
+                <select id="department" name="department">
+                </select>
+
+                <!-- Input for entering the course code -->
+                <label for="course-code">Course Code: </label>
+                <input type="text" id="course-code" name="course-code" placeholder="Enter Course Code">
+
+                <!-- Button to add the course to the must-have list -->
+                <button type="button" id="add-course">Add Course</button>
+            </form>
+
+            <!-- Display the list of must-have courses -->
+            <ul id="selected-courses">
+                <!-- List courses will be added here -->
+            </ul>
+        </section>
+
+        <!-- Other sections for time preferences, conflict resolution etc. can go here -->
+
+    </main>
+
+    <footer>
+        <p>Copyright 2023, Ethan Huynh</p>
+    </footer>
+</body>
+
+</html>

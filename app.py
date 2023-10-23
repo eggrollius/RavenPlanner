@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = create_app()
+app.debug = True
 
 if __name__ == '__main__':
     host = os.environ.get('HOST', '0.0.0.0')

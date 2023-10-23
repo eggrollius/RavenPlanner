@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -28,6 +28,6 @@ def create_app():
     
     @app.route("/")
     def index():
-        return "Hello, World!"
+        return render_template('/index.html')
 
     return app
