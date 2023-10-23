@@ -151,7 +151,6 @@ def update_course_by_crn(crn):
 
     # Update the course fields with new data
     course.registration_status = data.get('registration_status', course.registration_status)
-    #course.crn = data.get('crn', course.crn)  # possibly conflicting
     course.course_code = data.get('course_code', course.course_code)
     course.section = data.get('section', course.section)
     course.course_name = data.get('course_name', course.course_name)
@@ -160,26 +159,26 @@ def update_course_by_crn(crn):
     course.instructor = data.get('instructor', course.instructor)
     course.also_register_in = data.get('also_register_in', course.also_register_in)
 
-    # Update MeetingInfo records if they are provided in request data
-    new_meeting_infos = data.get('meeting_infos', None)
-    if new_meeting_infos is not None:
+    # Update MeetingInfo record if it is provided in request data
+    new_meeting_info = data.get('meeting_info', None)
+    if new_meeting_info is not None:
         # First, delete existing MeetingInfo entries
         MeetingInfo.query.filter_by(course_id=course.id).delete()
 
-        # Then, add new MeetingInfo entries
-        for meeting_info in new_meeting_infos:
-            new_meeting_info = MeetingInfo(
-                course_id=course.id,
-                meeting_date=meeting_info.get('meeting_date', ''),
-                days=meeting_info.get('days', ''),
-                time=meeting_info.get('time', ''),
-                building=meeting_info.get('building', ''),
-                room=meeting_info.get('room', '')
-            )
-            db.session.add(new_meeting_info)
+        # Then, add a new MeetingInfo entry
+        new_meeting_info_entry = MeetingInfo(
+            course_id=course.id,
+            meeting_date=new_meeting_info.get('meeting_date', ''),
+            days=new_meeting_info.get('days', ''),
+            time=new_meeting_info.get('time', ''),
+            building=new_meeting_info.get('building', ''),
+            room=new_meeting_info.get('room', '')
+        )
+        db.session.add(new_meeting_info_entry)
 
     db.session.commit()
     return jsonify({'message': 'Course and meeting info updated'})
+
 
 
 #delete by unique CRN
