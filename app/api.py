@@ -149,9 +149,7 @@ def update_course_by_crn(crn):
 
     data = request.get_json()
 
-    # Update the course fields with new data. 
-    # Note: Be careful if you want to update the CRN itself, 
-    # as it should be unique and you should handle conflicts.
+    # Update the course fields with new data
     course.registration_status = data.get('registration_status', course.registration_status)
     #course.crn = data.get('crn', course.crn) #possibly conflicting
     course.course_code = data.get('course_code', course.course_code)
