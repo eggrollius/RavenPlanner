@@ -25,7 +25,7 @@ def add_course():
     db.session.flush() # this makes the new course have a primary key, that i will associate to the meeting info obejct
 
     #for each different meeting time of the course
-    meeting_info = data['meeting_info']
+    meeting_info = data['meeting_infos']
     new_meeting_info = MeetingInfo(
         course_id=new_course.id,
         meeting_date=meeting_info['meeting_date'],
@@ -139,7 +139,7 @@ def update_course_by_crn(crn):
     course.also_register_in = data.get('also_register_in', course.also_register_in)
 
     # Update MeetingInfo record if it is provided in request data
-    new_meeting_info = data.get('meeting_info', None)
+    new_meeting_info = data.get('meeting_infos', None)
     if new_meeting_info is not None:
         # First, delete existing MeetingInfo entries
         MeetingInfo.query.filter_by(course_id=course.id).delete()
@@ -157,8 +157,6 @@ def update_course_by_crn(crn):
 
     db.session.commit()
     return jsonify({'message': 'Course and meeting info updated'})
-
-
 
 #delete by unique CRN
 @api.route('/course/crn/<crn>', methods=['DELETE'])
