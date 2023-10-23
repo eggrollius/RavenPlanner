@@ -25,16 +25,16 @@ def add_course():
     db.session.flush() # this makes the new course have a primary key, that i will associate to the meeting info obejct
 
     #for each different meeting time of the course
-    for meeting_info in data['meeting_infos']:
-        new_meeting_info = MeetingInfo(
-            course_id=new_course.id,
-            meeting_date=meeting_info['meeting_date'],
-            days=meeting_info['days'],
-            time=meeting_info['time'],
-            building=meeting_info['building'],
-            room=meeting_info['room']
-        )
-        db.session.add(new_meeting_info)
+    meeting_info = data['meeting_info']
+    new_meeting_info = MeetingInfo(
+        course_id=new_course.id,
+        meeting_date=meeting_info['meeting_date'],
+        days=meeting_info['days'],
+        time=meeting_info['time'],
+        building=meeting_info['building'],
+        room=meeting_info['room']
+    )
+    db.session.add(new_meeting_info)
     try:
         db.session.commit()
         return jsonify({'message': 'New course added'})
@@ -118,27 +118,6 @@ def check_course_exists_by_crn(crn):
         return jsonify({'message': 'Course exists', 'exists': True})
     else:
         return jsonify({'message': 'Course does not exist', 'exists': False})
-#update by id
-@api.route('/course/<crn>', methods=['PUT'])
-def update_course(id):
-    course = Course.query.get(id)
-    if not course:
-        return jsonify({'message': 'Course not found'})
-        
-    data = request.get_json()
-
-    course.registration_status = data['registration_status']
-    course.crn = data['crn']
-    course.course_code = data['course_code']
-    course.section = data['section']
-    course.course_name = data['course_name']
-    course.credits = data['credits']
-    course.type = data['type']
-    course.instructor = data['instructor']
-    course.also_register_in = data['also_register_in']
-
-    db.session.commit()
-    return jsonify({'message': 'Course updated'})
 
 #update by crn
 @api.route('/course/crn/<crn>', methods=['PUT'])
