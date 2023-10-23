@@ -110,8 +110,16 @@ def search_course():
 
     return jsonify({'courses': course_list})
 
-#update course
-@api.route('/course/<id>', methods=['PUT'])
+#check existence of class by crn
+@api.route('/course/exists/<crn>', methods=['GET'])
+def check_course_exists_by_crn(crn):
+    course = Course.query.filter_by(crn=crn).first()
+    if course:
+        return jsonify({'message': 'Course exists', 'exists': True})
+    else:
+        return jsonify({'message': 'Course does not exist', 'exists': False})
+#update by id
+@api.route('/course/<crn>', methods=['PUT'])
 def update_course(id):
     course = Course.query.get(id)
     if not course:
@@ -128,6 +136,31 @@ def update_course(id):
     course.type = data['type']
     course.instructor = data['instructor']
     course.also_register_in = data['also_register_in']
+
+    db.session.commit()
+    return jsonify({'message': 'Course updated'})
+
+#update by crn
+@api.route('/course/crn/<crn>', methods=['PUT'])
+def update_course_by_crn(crn):
+    course = Course.query.filter_by(crn=crn).first()
+    if not course:
+        return jsonify({'message': 'Course not found'})
+
+    data = request.get_json()
+
+    # Update the course fields with new data. 
+    # Note: Be careful if you want to update the CRN itself, 
+    # as it should be unique and you should handle conflicts.
+    course.registration_status = data.get('registration_status', course.registration_status)
+    #course.crn = data.get('crn', course.crn) #possibly conflicting
+    course.course_code = data.get('course_code', course.course_code)
+    course.section = data.get('section', course.section)
+    course.course_name = data.get('course_name', course.course_name)
+    course.credits = data.get('credits', course.credits)
+    course.type = data.get('type', course.type)
+    course.instructor = data.get('instructor', course.instructor)
+    course.also_register_in = data.get('also_register_in', course.also_register_in)
 
     db.session.commit()
     return jsonify({'message': 'Course updated'})
