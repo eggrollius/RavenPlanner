@@ -243,7 +243,11 @@ def create_date_time_range_from_meetings(meetings: List[Dict]) -> DateTimeRange:
     date_time_range = DateTimeRange()
 
     for meeting in meetings:
-        start_date, end_date = meeting.get('meeting_date', '').split(' to ')
+        if meeting.meeting_date:
+            start_date, end_date = meeting.meeting_date.split(' to ')
+        else:
+            start_date, end_date = None, None  # Or some default value
+
         days_of_week = meeting.get('days', '')
         start_time, end_time = meeting.get('time', '').split(' - ')
 
