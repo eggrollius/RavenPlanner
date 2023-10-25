@@ -239,23 +239,30 @@ class DateTimeRange:
                         return True
         return False
 
-def create_date_time_range_from_meetings(meetings: List[Dict]) -> DateTimeRange:
+def create_date_time_range_from_meetings(meetings: List[MeetingInfo]) -> DateTimeRange:
     date_time_range = DateTimeRange()
 
     for meeting in meetings:
-        if meeting.meeting_date:
+        if hasattr(meeting, 'meeting_date'):
             start_date, end_date = meeting.meeting_date.split(' to ')
         else:
             start_date, end_date = None, None  # Or some default value
 
-        days_of_week = meeting.get('days', '')
-        start_time, end_time = meeting.get('time', '').split(' - ')
+        if hasattr(meeting, 'days'):
+            days_of_week = meeting.days
+        else:
+            days_of_week = ''  # Default value
 
-        date_time_range.add_range(start_date=start_date.strip(),
-                                  end_date=end_date.strip(),
-                                  days_of_week=days_of_week.strip(),
-                                  start_time=start_time.strip(),
-                                  end_time=end_time.strip())
+        if hasattr(meeting, 'time'):
+            start_time, end_time = meeting.time.split(' - ')
+        else:
+            start_time, end_time = None, None  # Default value
+
+        date_time_range.add_range(start_date=start_date.strip() if start_date else None,
+                                  end_date=end_date.strip() if end_date else None,
+                                  days_of_week=days_of_week.strip() if days_of_week else None,
+                                  start_time=start_time.strip() if start_time else None,
+                                  end_time=end_time.strip() if end_time else None)
 
     return date_time_range
 
