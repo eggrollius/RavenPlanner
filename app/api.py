@@ -2,6 +2,11 @@ from flask import Blueprint, request, jsonify
 from app.models import Course
 from app.models import MeetingInfo
 from app import db
+from copy import deepcopy, copy
+
+from datetime import datetime, time
+from dateutil.rrule import rrule, DAILY
+from typing import List, Dict
 
 from sqlalchemy.exc import IntegrityError #excpetion
 
@@ -186,3 +191,178 @@ def delete_course(id):
     db.session.delete(course)
     db.session.commit()
     return jsonify({'message': 'Course deleted'})
+
+from datetime import datetime, time, date
+from dateutil.rrule import rrule, DAILY
+from typing import List
+
+class SimpleDateTimeRange:
+    def __init__(self, start_date, end_date, days_of_week, start_time, end_time):
+        self.start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
+        self.end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+        self.days_of_week = days_of_week  # list of integers [0(Sunday), 1(Monday), ... , 6(Saturday)]
+        self.start_time = datetime.strptime(start_time, '%H:%M:%S').time() if start_time else None
+        self.end_time = datetime.strptime(end_time, '%H:%M:%S').time() if end_time else None
+
+class DateTimeRange:
+    def __init__(self):
+        self.ranges: List[SimpleDateTimeRange] = []
+
+    def add_range(self, start_date=None, end_date=None, days_of_week=None, start_time=None, end_time=None, 
+                  simple_range: SimpleDateTimeRange = None):
+        if simple_range:
+            new_range = simple_range
+        else:
+            new_range = SimpleDateTimeRange(start_date, end_date, days_of_week, start_time, end_time)
+        self.ranges.append(new_range)
+
+    def overlaps(self, other):
+        for r1 in self.ranges:
+            for r2 in other.ranges:
+                if self._single_overlap(r1, r2):
+                    return True
+        return False
+
+    def _single_overlap(self, r1, r2):
+        if not r1.start_date or not r2.start_date:
+            return False
+        if r1.start_date > r2.end_date or r1.end_date < r2.start_date:
+            return False
+        if not set(r1.days_of_week).intersection(r2.days_of_week):
+            return False
+        if r1.start_time > r2.end_time or r1.end_time < r2.start_time:
+            return False
+        for dt in rrule(DAILY, dtstart=datetime.combine(r1.start_date, time()), until=datetime.combine(r1.end_date, time())):
+            if dt.weekday() in r1.days_of_week:
+                for other_dt in rrule(DAILY, dtstart=datetime.combine(r2.start_date, time()), until=datetime.combine(r2.end_date, time())):
+                    if other_dt.weekday() in r2.days_of_week and dt.date() == other_dt.date():
+                        return True
+        return False
+
+def create_date_time_range_from_meetings(meetings: List[Dict]) -> DateTimeRange:
+    date_time_range = DateTimeRange()
+
+    for meeting in meetings:
+        start_date, end_date = meeting.get('meeting_date', '').split(' to ')
+        days_of_week = meeting.get('days', '')
+        start_time, end_time = meeting.get('time', '').split(' - ')
+
+        date_time_range.add_range(start_date=start_date.strip(),
+                                  end_date=end_date.strip(),
+                                  days_of_week=days_of_week.strip(),
+                                  start_time=start_time.strip(),
+                                  end_time=end_time.strip())
+
+    return date_time_range
+
+class Section:
+    def __init__(self, crn: int, date_time: DateTimeRange, *args, **kwargs):
+        self.crn = crn
+        self.date_time = date_time
+        self.child_class = kwargs.get('child_class', None)
+
+class Schedule:
+    def __init__(self):
+        self.date_time = None
+        self.sections = []
+    def try_add_section(self, section: Section) -> bool:
+        if(self.date_time is None or (self.date_time.overlaps(section.date_time) and self.date_time.overlaps(section.child_class.date_time))):
+            self.sections.append(section)
+            self.date_time.add_range(simple_range=section.date_time)
+            return True
+        else:
+            return False
+    def deep_copy(self):
+        return deepcopy(self)
+    def shallow_copy(self):
+        return copy(self)
+
+
+@api.route('/generate_schedule', methods=['POST'])
+def generate_schedule():
+    data = request.get_json()
+    required_courses_codes = data["required_courses_codes"]
+    # Query for all Course objects where course_code is in course_codes_list
+    courses = Course.query.filter(Course.course_code.in_(required_courses_codes)).all()
+    # Iterate through the results to get the 'also_register_in' field for each course and make a section object
+    courses_sections = {}
+    for course in courses:
+        sections = []
+        if course.also_register_in:
+            # if the course has some child courses
+            also_register_courses_list = []
+            # Split comma-separated course codes into a list
+            also_register_codes = course.also_register_in.split(',')
+            
+            # Remove leading and trailing whitespace from each code
+            also_register_codes = [code.strip() for code in also_register_codes]
+
+            parent_date_time = create_date_time_range_from_meetings(course.meeting_infos)
+            for child_code in also_register_codes:
+                child = Course.query.filter(Course.course_code==child_code).first()
+                child_date_time = create_date_time_range_from_meetings(child.meeting_infos)
+                child_section = Section(child.crn, child_date_time)
+
+                sections.append(Section(course.crn, parent_date_time, child_section))
+        else:
+            #if the course is a standalone
+            parent_date_time = create_date_time_range_from_meetings(course.meeting_infos)
+            sections.append(Section(course.crn, parent_date_time))
+        courses_sections[course.course_code] = sections
+    
+    #now generate the schedules
+    schedules = [Schedule()]
+    for course_code in required_courses_codes:
+        sections_to_add = courses_sections[course_code]
+        schedules_buffer = []
+        for section in sections_to_add:
+            for schedule in schedules:
+                buffer_schedule = schedule.deep_copy()
+                if buffer_schedule.try_add_section(section):
+                    #if no conflict
+                    schedules_buffer.append(buffer_schedule)
+        schedules = schedules_buffer
+
+    # Prepare the final data structure
+    final_schedules = []
+
+    for schedule in schedules:
+        schedule_dict = {
+            'sections': []
+        }
+
+        for section in schedule.sections:
+            section_dict = {
+                'crn': section.crn,
+                'course_code': section.course_code,  # This needs to be populated
+                'course_name': section.course_name,  # This needs to be populated
+                'instructor': section.instructor,  # This needs to be populated
+                'credits': section.credits,  # This needs to be populated
+                'type': section.type,  # This needs to be populated
+                'date_time_ranges': section.date_time.to_dict()  # Assuming you have a to_dict() in your DateTimeRange class
+            }
+            if section.child_class:
+                section_dict['child_sections'] = [
+                    {
+                        'crn': section.child_class.crn,
+                        'course_code': section.child_class.course_code,  # This needs to be populated
+                        'course_name': section.child_class.course_name,  # This needs to be populated
+                        'instructor': section.child_class.instructor,  # This needs to be populated
+                        'credits': section.child_class.credits,  # This needs to be populated
+                        'type': section.child_class.type,  # This needs to be populated
+                        'date_time_ranges': section.child_class.date_time.to_dict()  # Assuming you have a to_dict() in your DateTimeRange class
+                    }
+                ]
+            schedule_dict['sections'].append(section_dict)
+        
+        final_schedules.append(schedule_dict)
+
+    response = {
+        'status': 'success',
+        'message': 'Schedule generated',
+        'data': {
+            'schedules': final_schedules
+        }
+    }
+
+    return jsonify(response), 200
