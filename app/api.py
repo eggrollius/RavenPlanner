@@ -198,8 +198,8 @@ from typing import List
 
 class SimpleDateTimeRange:
     def __init__(self, start_date, end_date, days_of_week, start_time, end_time):
-        self.start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
-        self.end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+        self.start_date = datetime.strptime(start_date, '%b %d, %Y').date() if start_date else None
+        self.end_date = datetime.strptime(end_date, '%b %d, %Y').date() if end_date else None
         self.days_of_week = days_of_week  # list of integers [0(Sunday), 1(Monday), ... , 6(Saturday)]
         self.start_time = datetime.strptime(start_time, '%H:%M:%S').time() if start_time else None
         self.end_time = datetime.strptime(end_time, '%H:%M:%S').time() if end_time else None
@@ -254,9 +254,13 @@ def create_date_time_range_from_meetings(meetings: List[MeetingInfo]) -> DateTim
             days_of_week = ''  # Default value
 
         if hasattr(meeting, 'time'):
-            start_time, end_time = meeting.time.split(' - ')
+            time_parts = meeting.time.split(' - ')
+            if len(time_parts) == 2:
+                start_time, end_time = time_parts
+            else:
+                start_time, end_time = None, None  # Or some default value
         else:
-            start_time, end_time = None, None  # Default value
+            start_time, end_time = None, None  # Or some default value
 
         date_time_range.add_range(start_date=start_date.strip() if start_date else None,
                                   end_date=end_date.strip() if end_date else None,
@@ -267,8 +271,8 @@ def create_date_time_range_from_meetings(meetings: List[MeetingInfo]) -> DateTim
     return date_time_range
 
 class Section:
-    def __init__(self, crn: int, date_time: DateTimeRange, *args, **kwargs):
-        self.crn = crn
+    def __init__(self, course: Course, date_time: DateTimeRange, *args, **kwargs):
+        self.course = course
         self.date_time = date_time
         self.child_class = kwargs.get('child_class', None)
 
@@ -277,7 +281,11 @@ class Schedule:
         self.date_time = None
         self.sections = []
     def try_add_section(self, section: Section) -> bool:
-        if(self.date_time is None or (self.date_time.overlaps(section.date_time) and self.date_time.overlaps(section.child_class.date_time))):
+        if self.date_time is None:
+            self.sections.append(section)
+            return True
+
+        if(self.date_time.overlaps(section.date_time) and self.date_time.overlaps(section.child_class.date_time)):
             self.sections.append(section)
             self.date_time.add_range(simple_range=section.date_time)
             return True
@@ -312,13 +320,13 @@ def generate_schedule():
             for child_code in also_register_codes:
                 child = Course.query.filter(Course.course_code==child_code).first()
                 child_date_time = create_date_time_range_from_meetings(child.meeting_infos)
-                child_section = Section(child.crn, child_date_time)
+                child_section = Section(child, child_date_time)
 
-                sections.append(Section(course.crn, parent_date_time, child_section))
+                sections.append(Section(course, parent_date_time, child_section))
         else:
             #if the course is a standalone
             parent_date_time = create_date_time_range_from_meetings(course.meeting_infos)
-            sections.append(Section(course.crn, parent_date_time))
+            sections.append(Section(course, parent_date_time))
         courses_sections[course.course_code] = sections
     
     #now generate the schedules
@@ -344,24 +352,24 @@ def generate_schedule():
 
         for section in schedule.sections:
             section_dict = {
-                'crn': section.crn,
-                'course_code': section.course_code,  # This needs to be populated
-                'course_name': section.course_name,  # This needs to be populated
-                'instructor': section.instructor,  # This needs to be populated
-                'credits': section.credits,  # This needs to be populated
-                'type': section.type,  # This needs to be populated
-                'date_time_ranges': section.date_time.to_dict()  # Assuming you have a to_dict() in your DateTimeRange class
+                'crn': section.course.crn,
+                'course_code': section.course.course_code,  
+                'course_name': section.course.course_name,  
+                'instructor': section.course.instructor,  
+                'credits': section.course.credits,  
+                'type': section.course.type,  
+                'date_time_ranges': section.course.meeting_infos[0].as_dict()
             }
             if section.child_class:
                 section_dict['child_sections'] = [
                     {
-                        'crn': section.child_class.crn,
-                        'course_code': section.child_class.course_code,  # This needs to be populated
-                        'course_name': section.child_class.course_name,  # This needs to be populated
-                        'instructor': section.child_class.instructor,  # This needs to be populated
-                        'credits': section.child_class.credits,  # This needs to be populated
-                        'type': section.child_class.type,  # This needs to be populated
-                        'date_time_ranges': section.child_class.date_time.to_dict()  # Assuming you have a to_dict() in your DateTimeRange class
+                        'crn': section.course.child_class.crn,
+                        'course_code': section.child_class.course.course_code,  # This needs to be populated
+                        'course_name': section.child_class.course.course_name,  # This needs to be populated
+                        'instructor': section.child_class.course.instructor,  # This needs to be populated
+                        'credits': section.child_class.course.credits,  # This needs to be populated
+                        'type': section.child_class.course.type,  # This needs to be populated
+                        'date_time_ranges': section.child_class.course.meeting_infos[0].as_dict()  # Assuming you have a to_dict() in your DateTimeRange class
                     }
                 ]
             schedule_dict['sections'].append(section_dict)

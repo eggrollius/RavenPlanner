@@ -21,3 +21,13 @@ class MeetingInfo(db.Model):
     time = db.Column(db.String(50))
     building = db.Column(db.String(50))
     room = db.Column(db.String(50))
+
+    def as_dict(self):
+        return {
+            'course_id': self.course_id,
+            'meeting_date': self.meeting_date,
+            'days': self.days,
+            'time': self.time,
+            'building': self.building,
+            'room': self.room,
+        }
