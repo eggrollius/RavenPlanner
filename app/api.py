@@ -108,11 +108,10 @@ def search_course():
             'course_name': course.course_name,
             'credits': course.credits,
             'type': course.type,
-            'instructor': course.instructor,
             'also_register_in': course.also_register_in,
+            'instructor': course.instructor,
             'meeting_infos': meeting_infos
         })
-
     return jsonify({'courses': course_list})
 
 #check existence of class by crn
