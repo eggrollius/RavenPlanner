@@ -8,6 +8,8 @@ from datetime import datetime, time
 from dateutil.rrule import rrule, DAILY
 from typing import List, Dict
 
+from sqlalchemy import text
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError #excpetion
 
 api = Blueprint('api', __name__)
@@ -200,8 +202,8 @@ class SimpleDateTimeRange:
         self.start_date = datetime.strptime(start_date, '%b %d, %Y').date() if start_date else None
         self.end_date = datetime.strptime(end_date, '%b %d, %Y').date() if end_date else None
         self.days_of_week = days_of_week  # list of integers [0(Sunday), 1(Monday), ... , 6(Saturday)]
-        self.start_time = datetime.strptime(start_time, '%H:%M:%S').time() if start_time else None
-        self.end_time = datetime.strptime(end_time, '%H:%M:%S').time() if end_time else None
+        self.start_time = datetime.strptime(start_time, '%H:%M').time() if start_time else None
+        self.end_time = datetime.strptime(end_time, '%H:%M').time() if end_time else None
 
 class DateTimeRange:
     def __init__(self):
@@ -298,35 +300,49 @@ class Schedule:
 
 @api.route('/generate_schedule', methods=['POST'])
 def generate_schedule():
+    #timing for testing
+    import time
+    start_time = time.time()
+
     data = request.get_json()
     required_courses_codes = data["required_courses_codes"]
     # Query for all Course objects where course_code is in course_codes_list
-    courses = Course.query.filter(Course.course_code.in_(required_courses_codes)).all()
+    courses = (
+        Course.query
+        .filter(Course.course_code.in_(required_courses_codes))
+        .filter(Course.section.op('~')('^[A-Za-z]+$'))
+        .all()
+    )
+    #print(courses)
     # Iterate through the results to get the 'also_register_in' field for each course and make a section object
     courses_sections = {}
     for course in courses:
         sections = []
         if course.also_register_in:
             # if the course has some child courses
-            also_register_courses_list = []
             # Split comma-separated course codes into a list
             also_register_codes = course.also_register_in.split(',')
-            
+            #print(f"The course called: {course.course_name} has these child courses: {also_register_codes}")
             # Remove leading and trailing whitespace from each code
             also_register_codes = [code.strip() for code in also_register_codes]
 
             parent_date_time = create_date_time_range_from_meetings(course.meeting_infos)
             for child_code in also_register_codes:
-                child = Course.query.filter(Course.course_code==child_code).first()
+                child = Course.query.filter(func.concat(Course.course_code, ' ', Course.section) == child_code).first()
                 child_date_time = create_date_time_range_from_meetings(child.meeting_infos)
                 child_section = Section(child, child_date_time)
 
-                sections.append(Section(course, parent_date_time, child_section))
+                sections.append(Section(course, parent_date_time, child_class=child_section))
+                
         else:
             #if the course is a standalone
             parent_date_time = create_date_time_range_from_meetings(course.meeting_infos)
             sections.append(Section(course, parent_date_time))
-        courses_sections[course.course_code] = sections
+        if course.course_code in courses_sections:
+            courses_sections[course.course_code].extend(sections)
+        else:
+            courses_sections[course.course_code] = sections
+
     
     #now generate the schedules
     schedules = [Schedule()]
@@ -353,6 +369,7 @@ def generate_schedule():
             section_dict = {
                 'crn': section.course.crn,
                 'course_code': section.course.course_code,  
+                'section': section.course.section,
                 'course_name': section.course.course_name,  
                 'instructor': section.course.instructor,  
                 'credits': section.course.credits,  
@@ -362,12 +379,13 @@ def generate_schedule():
             if section.child_class:
                 section_dict['child_sections'] = [
                     {
-                        'crn': section.course.child_class.crn,
-                        'course_code': section.child_class.course.course_code,  # This needs to be populated
-                        'course_name': section.child_class.course.course_name,  # This needs to be populated
-                        'instructor': section.child_class.course.instructor,  # This needs to be populated
-                        'credits': section.child_class.course.credits,  # This needs to be populated
-                        'type': section.child_class.course.type,  # This needs to be populated
+                        'crn': section.child_class.course.crn,
+                        'course_code': section.child_class.course.course_code,  
+                        'section': section.child_class.course.section,
+                        'course_name': section.child_class.course.course_name,  
+                        'instructor': section.child_class.course.instructor, 
+                        'credits': section.child_class.course.credits, 
+                        'type': section.child_class.course.type, 
                         'date_time_ranges': section.child_class.course.meeting_infos[0].as_dict()  # Assuming you have a to_dict() in your DateTimeRange class
                     }
                 ]
@@ -383,4 +401,7 @@ def generate_schedule():
         }
     }
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"API call took {elapsed_time} seconds")
     return jsonify(response), 200
