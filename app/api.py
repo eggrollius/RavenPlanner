@@ -87,34 +87,45 @@ def get_courses():
 @api.route('/course/search', methods=['GET'])
 def search_course():
     query = request.args.get('query', '')
+    print(query);
     courses = Course.query.filter(Course.course_code.ilike(f'%{query}%')).all()
 
-    course_list = []
+    course_sections = {};
+    #first find parent courses and the name of the sections
     for course in courses:
-        meeting_infos = []
-        for meeting_info in course.meeting_infos:
-            meeting_infos.append({
-                'meeting_date': meeting_info.meeting_date,
-                'days': meeting_info.days,
-                'time': meeting_info.time,
-                'building': meeting_info.building,
-                'room': meeting_info.room
-            })
+        section = course.section
+        
+        # Check if the course is a parent course (section has only one letter)
+        if len(section) == 1:
+            if section not in course_sections:
+                course_sections[section] = {}
+            course_sections[section]["parent"] = course_to_dict(course);
+            course_sections[section]["children"] = []; #prepare an empty list
 
-        course_list.append({
-            'id': course.id,
-            'registration_status': course.registration_status,
-            'crn': course.crn,
-            'course_code': course.course_code,
-            'section': course.section,
-            'course_name': course.course_name,
-            'credits': course.credits,
-            'type': course.type,
-            'also_register_in': course.also_register_in,
-            'instructor': course.instructor,
-            'meeting_infos': meeting_infos
-        })
-    return jsonify({'courses': course_list})
+    # Loop again to find child courses for each parent
+    for section in course_sections:
+        for course in courses:
+        # Check if the course is a child course (section has more than one letter)
+            if len(course.section) > 1:
+                if(course.section[0] == section):
+                    course_sections[section]["children"].append(course_to_dict(course))
+
+    return jsonify({"status":"success", "message":"succesfuly searched for course", "data":course_sections})
+
+def course_to_dict(course):
+    return {
+        'id': course.id,
+        'registration_status': course.registration_status,
+        'crn': course.crn,
+        'course_code': course.course_code,
+        'section': course.section,
+        'course_name': course.course_name,
+        'credits': course.credits,
+        'type': course.type,
+        'also_register_in': course.also_register_in,
+        'instructor': course.instructor,
+        'meeting_infos': [info.as_dict() for info in course.meeting_infos]
+    }
 
 #check existence of class by crn
 @api.route('/course/exists/<crn>', methods=['GET'])
@@ -404,4 +415,4 @@ def generate_schedule():
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"API call took {elapsed_time} seconds")
-    return jsonify(response), 200
+    return jsonify(response), 200, {'Content-Type': 'application/json'}
