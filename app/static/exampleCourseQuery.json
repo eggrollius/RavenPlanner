@@ -1,0 +1,836 @@
+{
+    "STAT 2507": {
+        "sections": {
+            "A": {
+                "children": [
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35412",
+                        "id": 4413,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4413,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "11:35 - 12:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A1",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35413",
+                        "id": 4414,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4414,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "10:35 - 11:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A2",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35414",
+                        "id": 4415,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4415,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "13:35 - 14:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A3",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35415",
+                        "id": 4416,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4416,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "12:35 - 13:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A4",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35416",
+                        "id": 4417,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4417,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "16:35 - 17:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A5",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35417",
+                        "id": 4418,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4418,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "15:35 - 16:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A6",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35418",
+                        "id": 4419,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4419,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "08:35 - 09:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A7",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35419",
+                        "id": 4420,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4420,
+                                "days": "Thu",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "10:35 - 11:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A8",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 A",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35980",
+                        "id": 4421,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4421,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "3393",
+                                "time": "17:35 - 18:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "A9",
+                        "type": "Laboratory"
+                    }
+                ],
+                "parent": {
+                    "also_register_in": "STAT 2507 A1,STAT 2507 A2,STAT 2507 A3,STAT 2507 A4,STAT 2507 A5,STAT 2507 A6,STAT 2507 A7,STAT 2507 A8,STAT 2507 A9",
+                    "course_code": "STAT 2507",
+                    "course_name": "Intro to Stat Modelling I",
+                    "credits": 0.5,
+                    "crn": "35411",
+                    "id": 4412,
+                    "instructor": "Ahmed Almaskut",
+                    "meeting_infos": [
+                        {
+                            "building": "Nideyinàn  (former UC)",
+                            "course_id": 4412,
+                            "days": "Wed Fri",
+                            "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                            "room": "231",
+                            "time": "14:35 - 15:55"
+                        }
+                    ],
+                    "registration_status": "Registration Closed",
+                    "section": "A",
+                    "type": "Lecture"
+                }
+            },
+            "B": {
+                "children": [
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35422",
+                        "id": 4424,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4424,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "14:35 - 15:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B2",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35423",
+                        "id": 4425,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4425,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "11:35 - 12:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B3",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35424",
+                        "id": 4426,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4426,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "11:35 - 12:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B4",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35425",
+                        "id": 4427,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4427,
+                                "days": "Thu",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "11:35 - 12:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B5",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35426",
+                        "id": 4428,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4428,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "10:35 - 11:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B6",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35427",
+                        "id": 4429,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4429,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "14:35 - 15:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B7",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35428",
+                        "id": 4430,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4430,
+                                "days": "Thu",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "16:35 - 17:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B8",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 B",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35421",
+                        "id": 4423,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4423,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "10:35 - 11:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "B1",
+                        "type": "Laboratory"
+                    }
+                ],
+                "parent": {
+                    "also_register_in": "STAT 2507 B1,STAT 2507 B2,STAT 2507 B3,STAT 2507 B4,STAT 2507 B5,STAT 2507 B6,STAT 2507 B7,STAT 2507 B8",
+                    "course_code": "STAT 2507",
+                    "course_name": "Intro to Stat Modelling I",
+                    "credits": 0.5,
+                    "crn": "35420",
+                    "id": 4422,
+                    "instructor": "Ahmed Almaskut",
+                    "meeting_infos": [
+                        {
+                            "building": "Tory Building",
+                            "course_id": 4422,
+                            "days": "Tue Thu",
+                            "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                            "room": "360",
+                            "time": "08:35 - 09:55"
+                        }
+                    ],
+                    "registration_status": "Registration Closed",
+                    "section": "B",
+                    "type": "Lecture"
+                }
+            },
+            "C": {
+                "children": [
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35430",
+                        "id": 4432,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4432,
+                                "days": "Thu",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "14:35 - 15:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C1",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35431",
+                        "id": 4433,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4433,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "09:35 - 10:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C2",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35432",
+                        "id": 4434,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4434,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "13:35 - 14:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C3",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35433",
+                        "id": 4435,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4435,
+                                "days": "Thu",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "15:35 - 16:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C4",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35434",
+                        "id": 4436,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4436,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "15:35 - 16:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C5",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35435",
+                        "id": 4437,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4437,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "10:35 - 11:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C6",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35436",
+                        "id": 4438,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4438,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "09:35 - 10:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C7",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 C",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35437",
+                        "id": 4439,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4439,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "14:35 - 15:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "C8",
+                        "type": "Laboratory"
+                    }
+                ],
+                "parent": {
+                    "also_register_in": "STAT 2507 C1,STAT 2507 C2,STAT 2507 C3,STAT 2507 C4,STAT 2507 C5,STAT 2507 C6,STAT 2507 C7,STAT 2507 C8",
+                    "course_code": "STAT 2507",
+                    "course_name": "Intro to Stat Modelling I",
+                    "credits": 0.5,
+                    "crn": "35429",
+                    "id": 4431,
+                    "instructor": "Agnes Benhin",
+                    "meeting_infos": [
+                        {
+                            "building": "Minto Centre",
+                            "course_id": 4431,
+                            "days": "Tue Thu",
+                            "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                            "room": "2000",
+                            "time": "13:05 - 14:25"
+                        }
+                    ],
+                    "registration_status": "Registration Closed",
+                    "section": "C",
+                    "type": "Lecture"
+                }
+            },
+            "D": {
+                "children": [
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35439",
+                        "id": 4441,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4441,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "16:35 - 17:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D1",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35440",
+                        "id": 4442,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4442,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "16:35 - 17:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D2",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35441",
+                        "id": 4443,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4443,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "17:35 - 18:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D3",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35442",
+                        "id": 4444,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4444,
+                                "days": "Fri",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "11:35 - 12:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D4",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35443",
+                        "id": 4445,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4445,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "16:35 - 17:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D5",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35444",
+                        "id": 4446,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4446,
+                                "days": "Mon",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "12:35 - 13:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D6",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35445",
+                        "id": 4447,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4447,
+                                "days": "Tue",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "09:35 - 10:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D7",
+                        "type": "Laboratory"
+                    },
+                    {
+                        "also_register_in": "STAT 2507 D",
+                        "course_code": "STAT 2507",
+                        "course_name": "Intro to Stat Modelling I",
+                        "credits": 0,
+                        "crn": "35446",
+                        "id": 4448,
+                        "instructor": "",
+                        "meeting_infos": [
+                            {
+                                "building": "Herzberg Laboratories",
+                                "course_id": 4448,
+                                "days": "Wed",
+                                "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                                "room": "4385",
+                                "time": "12:35 - 13:25"
+                            }
+                        ],
+                        "registration_status": "Registration Closed",
+                        "section": "D8",
+                        "type": "Laboratory"
+                    }
+                ],
+                "parent": {
+                    "also_register_in": "STAT 2507 D1,STAT 2507 D2,STAT 2507 D3,STAT 2507 D4,STAT 2507 D5,STAT 2507 D6,STAT 2507 D7,STAT 2507 D8",
+                    "course_code": "STAT 2507",
+                    "course_name": "Intro to Stat Modelling I",
+                    "credits": 0.5,
+                    "crn": "35438",
+                    "id": 4440,
+                    "instructor": "Agnes Benhin",
+                    "meeting_infos": [
+                        {
+                            "building": "Tory Building",
+                            "course_id": 4440,
+                            "days": "Mon Wed",
+                            "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+                            "room": "360",
+                            "time": "08:35 - 09:55"
+                        }
+                    ],
+                    "registration_status": "Registration Closed",
+                    "section": "D",
+                    "type": "Lecture"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-body {
+/*body {
     font-family: 'Roboto Slab', Arial;
     color: #ffffff;
     margin: 0;
@@ -33,7 +33,7 @@ select {
     width: 200px;
 }
 
-/* Input Field */
+
 #course-code {
     padding: 10px;
     border: 1px solid #ccc;
@@ -41,12 +41,12 @@ select {
     width: 200px;
 }
 
-/* Input Field Placeholder */
+
 #course-code::placeholder {
     color: #000000;
 }
 
-/* Button */
+
 #add-course {
     background-color: #e91c24;
     color: #ffffff;
@@ -57,7 +57,7 @@ select {
     transition: background-color 0.3s ease;
 }
 
-/* Button Hover Effect */
+
 #add-course:hover {
     background-color: #000000;
 }
@@ -69,4 +69,11 @@ select {
     margin: 15px;
     display: inline-block;
     width: 30%;
-}
+}*/
+
+.navbar-center {
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 20px;
+  }

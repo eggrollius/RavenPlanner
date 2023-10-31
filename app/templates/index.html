@@ -4,23 +4,89 @@
 <head>
     <meta charset="UTF-8">
     <title>Raven Planner</title>
-
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">-->
     <link href='https://fonts.googleapis.com/css?family=Roboto Slab' rel='stylesheet'>
     <link rel="stylesheet" type="text/css" href="static\index.css">
+    <link rel="stylesheet" href="static\static.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="static\index.js" defer></script>
+    
 </head>
 
 <body>
-    <header>
+    <header class="bg-primary text-white text-center py-4">
         <h1>Raven Planner</h1>
-    </header>
-
+        <p class="mb-0">Ethan Huynh</p>
+        <p>Carleton University</p>
+      </header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="navbar-center">
+            <a class="navbar-brand" href="#">Home</a>
+            <a class="navbar-brand" href="projectinfo.html">Project Info</a>
+            <a class="navbar-brand" href="faq.html">FAQ</a>
+        </div>
+    </nav>
+    
+      <!-- Main content -->
+      <div class="container mt-5">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active" id="add-course-tab" data-toggle="tab" href="#addCourse">Add Course</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="preferences-tab" data-toggle="tab" href="#preferences">Preferences</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="view-schedule-tab" data-toggle="tab" href="#viewSchedule">View Schedule</a>
+          </li>
+        </ul>
+    
+        <!-- Tab content -->
+        <div class="tab-content mt-3">
+          <div class="tab-pane active" id="addCourse">
+            <!-- Add Course Form -->
+            <div class="d-flex justify-content-left">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <select class="form-select mb-3" id="department" name="department"></select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group ml-2">
+                            <input type="text" class="form-control" placeholder="1007" id="course-code">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-primary ml-2 w-50" id="addCourseBtn">Add</button>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- List of Added Courses -->
+            <div class="accordion mt-3" id="selected-courses">
+            </div>
+          </div>
+    
+          <div class="tab-pane" id="preferences">
+            <!-- Preferences Content -->
+            <p>Your preferences content will go here.</p>
+          </div>
+    
+          <div class="tab-pane" id="viewSchedule">
+            <!-- View Schedule Content -->
+            <p>Your generated schedules will appear here.</p>
+          </div>
+        </div>
+      </div>
+    <!--
     <nav>
-        <!-- Navigation links go here -->
+        
     </nav>
 
     <nav>
-        <!-- Navigation links can go here -->
+       
     </nav>
 
     <main>
@@ -28,29 +94,31 @@
             <h2>Pick Your Courses</h2>
 
             <form id="course-form">
-                <!-- Dropdown for selecting the department -->
+                
                 <label for="department">Choose a Department:</label>
                 <select id="department" name="department">
                 </select>
 
-                <!-- Input for entering the course code -->
+               
                 <label for="course-code">Course Code: </label>
                 <input type="text" id="course-code" name="course-code" placeholder="Enter Course Code">
 
-                <!-- Button to add the course to the must-have list -->
+                
                 <button type="button" id="add-course">Add Course</button>
             </form>
 
-            <!-- Display the list of must-have courses -->
+           
             <ul id="selected-courses">
-                <!-- List courses will be added here -->
+                
             </ul>
-        </section>
 
-        <!-- Other sections for time preferences, conflict resolution etc. can go here -->
+            <button type="button" id="show-schedules">Show Schedules</button>
+        </section>
+   
+      
 
     </main>
-
+ -->
     <footer>
         <p>Copyright 2023, Ethan Huynh</p>
     </footer>
