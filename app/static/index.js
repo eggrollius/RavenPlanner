@@ -78,6 +78,7 @@ function add_course(department, course_code) {
                         courseData[courseName]["sections"] = data["data"];
                         courseCodes.push(courseName); 
                         generateCourseAccordion(courseName);
+
                         generateSchedules();
                         renderSchedule(currentScheduleIndex);
                     } else if(xhr.status == 400){
@@ -323,6 +324,8 @@ function clearSchedule() {
 }
 
 function generateSchedules() {
+    console.time("generateSchedules"); // Start timing
+
     for(const courseCode of courseCodes) {
         generateAllSections(courseCode);
     }
@@ -343,13 +346,13 @@ function generateSchedules() {
                 if(bufferSchedule.tryAddSection(section)) {
                     // If no conflict
                     newSchedules.push(bufferSchedule);
-                    console.log('no conflict found');
+                    //console.log('no conflict found');
                 } else {
                     // Conflict
-                    console.log(`Conflict found with: ${courseCode + section.parent.section} and this schedule:`);
-                    console.log(bufferSchedule);
+                    //console.log(`Conflict found with: ${courseCode + section.parent.section} and this schedule:`);
+                    //console.log(bufferSchedule);
                 }
-                console.log(newSchedules.length);
+                //console.log(newSchedules.length);
             }
         }
         if(newSchedules.length > 0) {
@@ -361,7 +364,8 @@ function generateSchedules() {
     }
 
     totalSchedules = schedules.length;
-    console.log(schedules)
+
+    console.timeEnd("generateSchedules"); // Stop timing and print the result
 }
 
 
@@ -383,7 +387,7 @@ function renderSchedule(scheduleIndex){
             const dayColumn = document.getElementById(day);
             // Create and add block for this class
             const classBlock = document.createElement('div');
-            classBlock.classList.add('class-block');
+            classBlock.classList.add('class-block', 'shadow-lg', 'rounded');
             classBlock.innerHTML = `${c.course_code + ' ' + c.section}<br>${meeting.time}`;
 
 
@@ -425,7 +429,7 @@ function generateAllSections(courseCode) {
         const section = courseSections[sectionName];
         if(section.children.length <= 0) {
             const newSection = new Section(section.parent);
-            sections[course.courseName].append(newSection);
+            sections[courseCode].push(newSection);
         } else {
             for(const child of section.children) {
                 const newSection = new Section(section.parent, child);
