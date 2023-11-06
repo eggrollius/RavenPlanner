@@ -90,6 +90,9 @@ select {
     position: relative; /* Allows absolute positioning inside */
     border-left: 1px solid #ddd;
     min-height: 600px; /* Adjust based on your time slots */
+    width: 100%;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
 }
 
 .class-block {
@@ -101,4 +104,6 @@ select {
     border-radius: 5px;
     text-align: center;
     line-height: 1;
+    font-size: 2vh;
 }
+
