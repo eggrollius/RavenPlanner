@@ -77,3 +77,28 @@ select {
     flex-grow: 1;
     gap: 20px;
   }
+
+/* For schedule */
+.time-slot {
+    height: 50px; /* Height represents 1 hour */
+    text-align: right;
+    padding-right: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+.day-column {
+    position: relative; /* Allows absolute positioning inside */
+    border-left: 1px solid #ddd;
+    min-height: 600px; /* Adjust based on your time slots */
+}
+
+.class-block {
+    position: absolute;
+    width: 100%;
+    background-color: #e91c24;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+    line-height: 1;
+}
