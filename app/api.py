@@ -55,7 +55,7 @@ def add_course():
 def get_courses():
     course_list = Course.query.all()
     courses = []
-
+    count = 0
     for course in course_list:
         meeting_infos = MeetingInfo.query.filter_by(course_id=course.id).all()
         meetings = []
@@ -80,15 +80,18 @@ def get_courses():
             'also_register_in': course.also_register_in,
             'meetings': meetings  # Including the meetings information here
         })
-
+        count += 1
+    print(count)
     return jsonify({'courses': courses})
 
 #Search courses by name
 @api.route('/course/search', methods=['GET'])
 def search_course():
-    query = request.args.get('query', '')
-    print(query);
-    courses = Course.query.filter(Course.course_code.ilike(f'%{query}%')).all()
+    query = request.args.get('query', '').upper()
+    courses = Course.query.filter(Course.course_code == query).all()
+    if not courses:
+        # No courses found, return a 400 response
+        return jsonify({"status": "error", "message": "No course found matching the query"}), 400
 
     course_sections = {};
     #first find parent courses and the name of the sections

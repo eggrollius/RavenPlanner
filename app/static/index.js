@@ -1,26 +1,18 @@
-let departments = [];
 let courseCodes = [];
 let courseData = {};
 let sections = {};
 let schedules = [];
 
+let userPreferences = {
+    minimizeClassesBefore: null,
+    minimizeClassesAfter: null,
+    prioritizeDaysOff: false
+};
+
 let currentScheduleIndex = 0; // This will keep track of the current schedule index
-let totalSchedules = 1000; // Total number of schedules (for schedule navigation)
+let totalSchedules = schedules.length; // Total number of schedules (for schedule navigation)
 
 function init(){
-    //add the departments
-    departments = ["MATH", "COMP", "STAT", "ECOR"];
-    let department_select = document.getElementById("department");
-    let inner_HTML = '';
-    if(department_select) {
-        for(let department of departments) {
-            inner_HTML += `<option value="${department}">${department}</option>`;
-        }
-        department_select.innerHTML = inner_HTML;
-    }
-
-    //course code
-
     //add course button
     document.getElementById("addCourseBtn").addEventListener("click", function() {
         const department = document.getElementById("department").value;
@@ -28,6 +20,12 @@ function init(){
         add_course(department, course_code);
         
     });
+
+    document.getElementById('minimizeBeforeTime').addEventListener('change', updatePreferences);
+    document.getElementById('minimizeBeforeTimeCheck').addEventListener('change', updatePreferences);
+    document.getElementById('minimizeAfterTime').addEventListener('change', updatePreferences);
+    document.getElementById('minimizeAfterTimeCheck').addEventListener('change', updatePreferences);
+    document.getElementById('prioritizeDaysOffCheck').addEventListener('change', updatePreferences);
 
     // Add event listeners for schedule navigation
     // For previous button
@@ -46,7 +44,7 @@ function init(){
         renderSchedule(currentScheduleIndex);
     }
     });
-    // For direct schedule index input navigatoin
+    // For direct schedule index input navigation
     document.getElementById('scheduleIndexInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         let inputIndex = parseInt(this.value, 10) - 1; // Arrays are zero-indexed
@@ -61,33 +59,72 @@ function init(){
 
 }
 
+function updateCourseSelection(courseData, courseId, isSelected) {
+    // Split the courseId into course code and section
+    const [subject, code, section] = courseId.split(' ');
+    const courseCode = subject + ' ' + code;
+
+    if(courseData.hasOwnProperty(courseCode)) {
+        const courseSections = courseData[courseCode].sections;
+        for(const currentSection of Object.keys(courseSections)) {
+            // Check parent course
+            if(courseSections[currentSection].parent.section == section) {
+                courseSections[currentSection].isSelected = isSelected;
+            } else {
+                // Check child courses
+                for(const currentChild of courseSections[currentSection].children) {
+                    if(currentChild.section == section) {
+                        currentChild.isSelected = isSelected;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 //get course data async, then update ui, and local data.
 function add_course(department, course_code) {
     try{
         let courseName = department + ' ' + course_code;
+        if(courseData.hasOwnProperty(courseName)) {
+            alert(`Course: ${courseName}, already present.`);
+            return;
+        }
+        
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "/api/course/search?query=" + courseName, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function() {
             if(xhr.readyState == 4) {
-                try {
-                    let data = JSON.parse(xhr.responseText);
+                let data = JSON.parse(xhr.responseText);
 
-                    if(xhr.status == 200) {
+                if(xhr.status == 200) {
+                    try {
+                        let sections = data["data"];
+                        // Set the courses 'isSelected' property to true
+                        for(let section of Object.keys(sections)) {
+                            sections[section].isSelected = true;
+                            for(let child of sections[section].children) {
+                                child.isSelected = true;
+                            }
+                        }
+
                         courseData[courseName] = {};
-                        courseData[courseName]["sections"] = data["data"];
+                        courseData[courseName]["sections"] = {};
+                        courseData[courseName]["sections"] = sections;
+
                         courseCodes.push(courseName); 
                         generateCourseAccordion(courseName);
 
                         generateSchedules();
-                        renderSchedule(currentScheduleIndex);
-                    } else if(xhr.status == 400){
-                        alert("Course does not Exist");
-                    } else {
-                        alert("Unknown Error");
+                    } catch(e) {
+                        console.log(e);
                     }
-                } catch (e) {
-                    console.log(e);
+                } else if(xhr.status == 400){
+                    alert(`Course: ${department +' ' + course_code}, does not Exist`);
+                } else {
+                    alert("Unknown Error");
                 }
             }
         };
@@ -112,7 +149,7 @@ function generateCourseAccordion(courseName) {
     accordionItem.innerHTML = `
     <h2 class="accordion-header" id="heading-${uniqueID}">
         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseID}" aria-expanded="true" aria-controls="${collapseID}">
-            ${courseName}
+            ${courseName.toUpperCase()}
         </button>
     </h2>
     <div id="${collapseID}" class="accordion-collapse collapse" aria-labelledby="heading-${uniqueID}" data-bs-parent="#selected-courses">
@@ -129,7 +166,7 @@ function generateCourseAccordion(courseName) {
     new bootstrap.Collapse(document.getElementById(collapseID));
 
     // Add Section Cards
-    for(section of Object.keys(courseData[courseName]["sections"])) {
+    for(const section of Object.keys(courseData[courseName]["sections"])) {
         addSectionCard(section, courseName);
     }
 }
@@ -148,7 +185,7 @@ function addSectionCard(section, courseName) {
     let currentRowCount = 0;
     newHTML = `
     <div class="card-header">
-        <input class="form-check-input" type="checkbox" value="" id="flexCheck-${sectionObj.parent.course_code + section}" checked>
+        <input class="form-check-input" type="checkbox" value="" id="flexCheck-${sectionObj.parent.course_code + ' ' + section}" checked>
         <label class="form-check-label" for="flexCheckChecked">
             Section ${section} - ${sectionObj.parent.instructor}
         </label>
@@ -169,7 +206,7 @@ function addSectionCard(section, courseName) {
         }
         newHTML+= `
         <div class="col-${colSize}">
-            <input class="form-check-input" type="checkbox" value="" id="flexCheck-${childCourse.course_code + childCourse.section}" checked>
+            <input class="form-check-input" type="checkbox" value="" id="flexCheck-${childCourse.course_code + ' ' + childCourse.section}" checked>
             <label class="form-check-label" for="flexCheckChecked">
                 <h6><u>Tutorial</u>-${childCourse.section}</h6>
             </label>
@@ -186,11 +223,9 @@ function addSectionCard(section, courseName) {
     // Loop through checkboxes and add event listeners
     sectionCard.querySelectorAll('.form-check-input').forEach((checkbox) => {
         checkbox.addEventListener('change', function() {
-            if(this.id == `flexCheck-${sectionObj.parent.course_code + section}`) {
-                //TODO
-            } else {
-                //TODO
-            }
+            const classCode = this.id.split('-')[1];
+            updateCourseSelection(courseData, classCode, this.checked);
+            generateSchedules();
         });
     });
 
@@ -312,12 +347,12 @@ class Schedule {
 
 function clearSchedule() {
     // List of all days in a week
-    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
     // Loop through each day and clear its contents
     daysOfWeek.forEach(day => {
         const dayColumn = document.getElementById(day);
-        while (dayColumn.hasChildNodes()) {
+        while(dayColumn.hasChildNodes()) {
             dayColumn.removeChild(dayColumn.firstChild);
         }
     });
@@ -329,7 +364,6 @@ function generateSchedules() {
     for(const courseCode of courseCodes) {
         generateAllSections(courseCode);
     }
-    console.log(sections);
 
     schedules = [new Schedule()]; // Creates new list of schedules, contains 1 empty schedule
     for(const courseCode of courseCodes) { 
@@ -366,13 +400,99 @@ function generateSchedules() {
     totalSchedules = schedules.length;
 
     console.timeEnd("generateSchedules"); // Stop timing and print the result
+
+    rateSchedules();
+    renderSchedule(currentScheduleIndex);
 }
 
+function rateSchedules() {
+    console.time("rateSchedules");
+    let ratedSchedules = schedules.map(schedule => {
+        return {
+            schedule: schedule,
+            rating: rateSchedule(schedule)
+        };
+    });
+    
+    // Sort the rated schedules array based on the ratings
+    ratedSchedules.sort((a, b) => b.rating - a.rating);
+    
+    // Extract the sorted schedules
+    schedules = ratedSchedules.map(item => item.schedule);
 
+    console.timeEnd("rateSchedules");
+}
+
+function rateSchedule(schedule) {
+    let rating = 0;
+    if(userPreferences.minimizeClassesBefore) {
+        rating -= 1.5 * countClassesBefore(schedule, userPreferences.minimizeClassesBefore)
+    }
+    if(userPreferences.minimizeClassesAfter) {
+        rating -= 1.5 * countClassesAfter(schedule, userPreferences.minimizeClassesAfter)
+    }
+    if(userPreferences.prioritizeDaysOff) {
+        rating += 1 * countDaysOff(schedule);
+    }
+    // console.log(rating);
+    return rating;
+}
+
+function countDaysOff(schedule) {
+    let scheduleDays = new Set(); // A set of days that this schedule has classes on.
+    for(const meeting of schedule.meetings) {
+        meeting.daysOfWeek.forEach(day => {
+            scheduleDays.add(day);
+        });
+    }
+
+    return 5 - scheduleDays.size;
+}
+
+function countClassesBefore(schedule, time) {
+    let count = 0;
+    const compareTime = timeToMinutes(time);
+
+    for(const meeting of schedule.meetings) {
+        // Extract start time from the meeting's time interval
+        const meetingStartTimeMinutes = timeToMinutes(meeting.timeInterval.split(' - ')[0]);
+        // Compare meeting start time with given time
+        if(meetingStartTimeMinutes < compareTime) {
+            count += meeting.daysOfWeek.length;
+        }
+    }
+
+    return count;
+}
+
+function countClassesAfter(schedule, time) {
+    let count = 0;
+    const compareTime = timeToMinutes(time);
+    for(const meeting of schedule.meetings) {
+        // Extract start time from the meeting's time interval
+        const meetingEndMinutes = timeToMinutes(meeting.timeInterval.split(' - ')[1]);
+        // Compare meeting start time with given time
+        if(meetingEndMinutes > compareTime) {
+            count += meeting.daysOfWeek.length;
+        }
+    }
+
+    return count;
+}
+
+// Helper function to convert HH:MM time string to minutes since midnight
+function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
 
 function renderSchedule(scheduleIndex){
     // Clear old schedule
     clearSchedule();
+    //Set the placholder to the start index
+    let scheduleIndexInput = document.getElementById('scheduleIndexInput');
+    scheduleIndexInput.setAttribute('placeholder', scheduleIndex+1);
+
     // Iterate over the schedule and update the calendar cells
     let schedule;
     schedule = schedules[scheduleIndex];
@@ -427,13 +547,18 @@ function generateAllSections(courseCode) {
 
     for(const sectionName of Object.keys(courseSections)) {
         const section = courseSections[sectionName];
-        if(section.children.length <= 0) {
-            const newSection = new Section(section.parent);
-            sections[courseCode].push(newSection);
-        } else {
-            for(const child of section.children) {
-                const newSection = new Section(section.parent, child);
+        if(section.isSelected) {
+            if(section.children.length <= 0) {
+                const newSection = new Section(section.parent);
                 sections[courseCode].push(newSection);
+            } else {
+                for(const child of section.children) {
+                    if(child.isSelected) {
+                        const newSection = new Section(section.parent, child);
+                        sections[courseCode].push(newSection);
+                    }
+
+                }
             }
         }
     }
@@ -443,12 +568,37 @@ function generateAllSections(courseCode) {
 function timeToPixels(time) {
     const [hours, minutes] = time.split(':').map(Number);
     return (hours + minutes / 60 - 7) * 50; // 50 pixels per hour, adjust the -7 based on start of time column
-  }
-  
-  // Function to calculate the duration in pixels
-  function durationToPixels(startTime, endTime) {
+}
+
+// Function to calculate the duration in pixels
+function durationToPixels(startTime, endTime) {
     const startTimeInPixels = timeToPixels(startTime);
     const endTimeInPixels = timeToPixels(endTime);
     return endTimeInPixels - startTimeInPixels;
-  }
+}
+
+function updatePreferences() {
+    const minimizeBeforeCheck = document.getElementById('minimizeBeforeTimeCheck');
+    const minimizeBeforeSelect = document.getElementById('minimizeBeforeTime');
+    const minimizeAfterCheck = document.getElementById('minimizeAfterTimeCheck');
+    const minimizeAfterSelect = document.getElementById('minimizeAfterTime');
+    const prioritizeDaysOffCheckbox = document.getElementById('prioritizeDaysOffCheck');
+
+    if(minimizeBeforeCheck.checked) {
+        userPreferences.minimizeClassesBefore = minimizeBeforeSelect.value;
+    } else {
+        userPreferences.minimizeClassesBefore = null;
+    }
+    if(minimizeAfterCheck.checked) {
+        userPreferences.minimizeClassesAfter = minimizeAfterSelect.value;
+    } else {
+        userPreferences.minimizeClassesAfter = null;
+    }
+   
+    userPreferences.prioritizeDaysOff = prioritizeDaysOffCheckbox.checked;
+
+    rateSchedules();
+    renderSchedule(currentScheduleIndex);
+}
+
 init();

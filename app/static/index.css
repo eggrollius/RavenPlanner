@@ -78,7 +78,9 @@ select {
     gap: 20px;
   }
 
-/* For schedule */
+.time-column {
+    min-width: 60px;
+}
 .time-slot {
     height: 50px; /* Height represents 1 hour */
     text-align: right;
@@ -104,6 +106,18 @@ select {
     border-radius: 5px;
     text-align: center;
     line-height: 1;
-    font-size: 2vh;
+    font-size: calc((2vw + 2vh)/2);
 }
 
+.input-group {
+    display: flex; /* Enables flexbox */
+    align-items: center; /* Aligns items vertically in the center */
+}
+
+.form-check-input {
+    margin-right: 10px; /* Adds some space between the checkbox and the select box */
+}
+
+.form-select {
+    justify-self: right;
+}
