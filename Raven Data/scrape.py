@@ -1,20 +1,67 @@
-#start chrome like this from BASH: "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
-#then navigate to carleton centra login, select term go to search, then start script
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By  # Import this
-import time
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import re
-import requests
 import api_client
+import json
+import time
 
-# Connect to the existing Chrome session
+# Load credentials from the configuration file
+with open('config.json', 'r') as file:
+    config = json.load(file)
+
+username = config.get('username')
+password = config.get('password')
+
+# Set up Chrome options to run in headless mode
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+chrome_options.add_argument("--headless")  # Uncomment to run Chrome in headless mode
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--window-size=1920,1080")
+
+# Start Chrome
 driver = webdriver.Chrome(options=chrome_options)
+
+# Goto the login page
+driver.get('https://central.carleton.ca/')
+
+wait = WebDriverWait(driver, 10)
+
+# Login
+wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="userNameInput"]')))
+usernameInput = driver.find_element(By.XPATH, '//*[@id="userNameInput"]')
+usernameInput.send_keys(username)
+
+wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="passwordInput"]')))
+passwordInput = driver.find_element(By.XPATH, '//*[@id="passwordInput"]')
+passwordInput.send_keys(password)
+
+wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="submitButton"]')))
+loginButton = driver.find_element(By.XPATH, '//*[@id="submitButton"]')
+loginButton.click()
+
+# Navigate to Time Table
+wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]')))
+buildTimeTable = driver.find_element(By.XPATH, '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]')
+buildTimeTable.click()
+
+# Select Term
+dropdown_element = wait.until(EC.presence_of_element_located((By.ID, 'term_code')))
+dropdown = Select(dropdown_element)
+dropdown.select_by_visible_text('Winter 2025 (January-April)')
+
+# Proceed to Search
+time.sleep(3)
+wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ws_div"]/input[1]')))
+proceedToSearch = driver.find_element(By.XPATH, '//*[@id="ws_div"]/input[1]')
+proceedToSearch.click()
+
+time.sleep(3)
 
 # First gather each course code on the site
 subjects = driver.find_element(By.ID, 'subj_id')
@@ -35,11 +82,10 @@ for option in soup.find_all('option'):
 
 #parse each subject page then add to file
 count = 0
-wait = WebDriverWait(driver, 10)
 courses = []
 for subject in subjects:
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="submit"][value="Search"][title="Search for courses based on my criteria"]')))
-    submitButton = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"][value="Search"][title="Search for courses based on my criteria"]')
+    wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]')))
+    submitButton = driver.find_element(By.XPATH, '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]')
     driver.execute_script(f"document.getElementById('subj_id').value = '{subject}';")
     submitButton.click()
 
@@ -55,8 +101,8 @@ for subject in subjects:
     except NoSuchElementException:
         html_content = ''
         
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="submit"][value="Return to Search"][title="Click to go back to the Search Criteria page"]')))
-    returnButton = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"][value="Return to Search"][title="Click to go back to the Search Criteria page"]')
+    wait.until(EC.presence_of_element_located((By.XPATH, '//input[@type="submit" and @value="Return to Search" and @title="Click to go back to the Search Criteria page"]')))
+    returnButton = driver.find_element(By.XPATH, '//input[@type="submit" and @value="Return to Search" and @title="Click to go back to the Search Criteria page"]')
     returnButton.click()
 
     #parsing the content
