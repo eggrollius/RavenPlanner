@@ -1,3 +1,3 @@
 release: flask db upgrade
-worker: python your_script.py
+worker: python RavenData/scrape.py
 web: python app.py

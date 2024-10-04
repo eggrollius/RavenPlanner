@@ -8,17 +8,16 @@ from bs4 import BeautifulSoup
 import api_client
 import json
 import time
+import os
 
-# Load credentials from the configuration file
-with open('config.json', 'r') as file:
-    config = json.load(file)
+username = os.environ.get('CARLETON_CENTRAL_USERNAME')
+password = os.environ.get('CARLETON_CENTRAL_PASSWORD')
+if not username or not password:
+    print("Error: Environment variables CARLETON_CENTRAL_USERNAME and CARLETON_CENTRAL_PASSWORD must be set.")
+    sys.exit(1) 
 
-username = config.get('username')
-password = config.get('password')
-
-# Set up Chrome options to run in headless mode
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")  # Uncomment to run Chrome in headless mode
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
