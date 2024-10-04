@@ -508,7 +508,13 @@ function renderSchedule(scheduleIndex){
             // Create and add block for this class
             const classBlock = document.createElement('div');
             classBlock.classList.add('class-block', 'shadow-lg', 'rounded');
-            classBlock.innerHTML = `${c.course_code + ' ' + c.section}<br>${meeting.time}`;
+            classBlock.innerHTML = `                
+                ${c.course_code + ' ' + c.section}
+                <div class="popup-box">
+                    Course Code: ${c.course_code} <br>
+                    Meeting Time: ${meeting.time}
+                </div>
+            `;
 
 
             classBlock.style.top = timeToPixels(startTime) + 'px';
@@ -528,8 +534,13 @@ function renderSchedule(scheduleIndex){
                 // Create and add block for this class
                 const classBlock = document.createElement('div');
                 classBlock.classList.add('class-block');
-                classBlock.innerHTML = `${c.course_code + ' ' + c.section}<br>${meeting.time}`;
-
+                classBlock.innerHTML = `
+                ${c.course_code + ' ' + c.section}
+                    <div class="popup-box">
+                        Course Code: ${c.course_code} <br>
+                        Meeting Time: ${meeting.time}
+                    </div>
+                `;
     
                 classBlock.style.top = timeToPixels(startTime) + 'px';
                 classBlock.style.height = durationToPixels(startTime, endTime) + 'px';

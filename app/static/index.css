@@ -106,7 +106,30 @@ select {
     border-radius: 5px;
     text-align: center;
     line-height: 1;
-    font-size: calc((2vw + 2vh)/2);
+    font-size: calc((1.5vw + 1.5vh)/2);
+    cursor: pointer;
+}
+
+.popup-box {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: 0; 
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.class-block:hover .popup-box {
+    visibility: visible;
+    opacity: 1;
 }
 
 .input-group {
