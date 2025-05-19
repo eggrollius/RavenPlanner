@@ -8,10 +8,12 @@ class Course(db.Model):
     section = db.Column(db.String(50))
     course_name = db.Column(db.String(255))
     credits = db.Column(db.Float)
-    type = db.Column(db.String(50))  # Can be 'Lecture', 'Tutorial', 'Lab' etc.
+    type = db.Column(db.String(50))  # Can be 'Lecture', 'Tutorial', 'Lab' 
     instructor = db.Column(db.String(255))
     also_register_in = db.Column(db.String(255))  # To specify the additional courses or sections like "COMP 1406 B1 or B2"
     meeting_infos = db.relationship('MeetingInfo', backref='course', lazy=True, cascade="all, delete-orphan")
+    term = db.Column(db.String(10), nullable=False)
+    year = db.Column(db.Integer, nullable=False)   
     
 class MeetingInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
