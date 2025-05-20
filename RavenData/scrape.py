@@ -52,7 +52,7 @@ buildTimeTable.click()
 # Select Term
 dropdown_element = wait.until(EC.presence_of_element_located((By.ID, 'term_code')))
 dropdown = Select(dropdown_element)
-dropdown.select_by_visible_text('Winter 2025 (January-April)')
+dropdown.select_by_visible_text('Summer 2025 (May-August)')
 
 # Proceed to Search
 time.sleep(3)
@@ -91,7 +91,6 @@ for subject in subjects:
     # Wait for the page to load
     try:
         # Try to parse the table of classes.
-        #time.sleep(3)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[width='1205'] > table[width='1200'] > tbody")))
         dataTable = driver.find_element(By.CSS_SELECTOR, "div[width='1205'] > table[width='1200'] > tbody")
         html_content = dataTable.get_attribute('innerHTML')
@@ -181,23 +180,28 @@ successful_updates = 0
 successful_additions = 0
 failed_operations = 0
 
-expected_keys = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'instructor', 'also_register_in']
+expected_keys = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'instructor', 'also_register_in', 'term', 'year']
 for course in courses:
     print(f"Creating course: '{course['course_name']}")
     # Fill in some missing keys
     for key in expected_keys:
         if key not in course:
-            course[key] = ''
+            if key == 'term':
+                course[key] = 'SUMMER'
+            elif key == 'year':
+                course[key] = 2025      
+            else:
+                course[key] = ''
     try:
         response = api_client.check_course_exists_by_crn(course["crn"])
         if response["exists"]:
             # Course exists, update it
             api_client.update_course_by_crn(course["crn"], course)
-            successful_updates += 1  # Increment successful updates counter
+            successful_updates += 1  
         else:
             # Course does not exist, add it
             api_client.add_course(course)
-            successful_additions += 1  # Increment successful additions counter
+            successful_additions += 1 
     except Exception as e:
         # Handle exceptions (if any)
         print(f"An error occurred while processing course with CRN {course['crn']}: {e}")
@@ -209,5 +213,3 @@ print(f"Successfully added {successful_additions} new courses.")
 if failed_operations > 0:
     print(f"{failed_operations} operations failed.")
 print("Done")
-# You can continue with the script or end it
-# driver.quit()  # If you want to close the browser

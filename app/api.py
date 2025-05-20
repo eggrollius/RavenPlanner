@@ -53,7 +53,8 @@ def add_course():
 #get all courses
 @api.route('/courses', methods=['GET'])
 def get_courses():
-    course_list = Course.query.all()
+    # Only get courses for the current term and year
+    course_list = Course.query.filter_by(term='SUMMER', year=2025).all()
     courses = []
     count = 0
     for course in course_list:
@@ -88,7 +89,8 @@ def get_courses():
 @api.route('/course/search', methods=['GET'])
 def search_course():
     query = request.args.get('query', '').upper()
-    courses = Course.query.filter(Course.course_code == query).all()
+    # Only search in current term and year
+    courses = Course.query.filter(Course.course_code == query, Course.term == 'SUMMER', Course.year == 2025).all()
     if not courses:
         # No courses found, return a 400 response
         return jsonify({"status": "error", "message": "No course found matching the query"}), 400
@@ -133,7 +135,8 @@ def course_to_dict(course):
 #check existence of class by crn
 @api.route('/course/exists/<crn>', methods=['GET'])
 def check_course_exists_by_crn(crn):
-    course = Course.query.filter_by(crn=crn).first()
+    # Only check for current term and year
+    course = Course.query.filter_by(crn=crn, term='SUMMER', year=2025).first()
     if course:
         return jsonify({'message': 'Course exists', 'exists': True})
     else:
@@ -142,7 +145,8 @@ def check_course_exists_by_crn(crn):
 #update by crn
 @api.route('/course/crn/<crn>', methods=['PUT'])
 def update_course_by_crn(crn):
-    course = Course.query.filter_by(crn=crn).first()
+    # Only update if course is in current term and year
+    course = Course.query.filter_by(crn=crn, term='SUMMER', year=2025).first()
     if not course:
         return jsonify({'message': 'Course not found'})
 
@@ -181,7 +185,8 @@ def update_course_by_crn(crn):
 #delete by unique CRN
 @api.route('/course/crn/<crn>', methods=['DELETE'])
 def delete_course_by_crn(crn):
-    course = Course.query.filter_by(crn=crn).first()
+    # Only delete if course is in current term and year
+    course = Course.query.filter_by(crn=crn, term='SUMMER', year=2025).first()
     if not course:
         return jsonify({'message': 'Course not found'})
 
@@ -197,7 +202,8 @@ def delete_course_by_crn(crn):
 @api.route('/course/<id>', methods=['DELETE'])
 def delete_course(id):
     course = Course.query.get(id)
-    if not course:
+    # Only delete if course is in current term and year
+    if not course or course.term != 'SUMMER' or course.year != 2025:
         return jsonify({'message': 'Course not found'})
 
     # Delete all related MeetingInfo entries
