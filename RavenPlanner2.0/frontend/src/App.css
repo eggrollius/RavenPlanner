@@ -1,0 +1,294 @@
+/* Modern dark mode styles for Raven Planner */
+.dark-root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #181c24 0%, #232a34 100%);
+  color: #f3f4f8;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #a4161a; /* deeper, modern red */
+  padding: 2.5rem 0 1.5rem 0;
+  text-align: center;
+  box-shadow: 0 2px 16px 0 #0002;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-top: 0.5rem;
+  color: #fff8;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 0;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+.utility-card {
+  background: #232a34;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 32px 0 #0004;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  width: 100%;
+  max-width: 1200px;
+  min-width: unset;
+}
+
+.tabs {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: #a4161a; /* match modern red */
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+
+.tab.active, .tab:hover {
+  color: #fff;
+  border-bottom: 2px solid #a4161a;
+}
+
+.course-section {
+  margin-top: 1rem;
+}
+
+.course-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  color: #fff;
+}
+
+.search-bar-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.search-bar {
+  flex: 1;
+  padding: 0.8rem 1.2rem;
+  border-radius: 0.7rem;
+  border: none;
+  background: #181c24;
+  color: #f3f4f8;
+  font-size: 1.1rem;
+  outline: none;
+  box-shadow: 0 2px 8px 0 #0002;
+  transition: background 0.2s;
+}
+
+.search-bar:focus {
+  background: #232a34;
+}
+
+.add-btn {
+  background: #a4161a;
+  color: #fff;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.8rem 2.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px 0 #0002;
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #7c1013;
+}
+
+.search-results {
+  background: #181c24;
+  border-radius: 0.7rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px 0 #0002;
+  padding: 0.2rem 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.search-suggestion {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  color: #f3f4f8;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 0.5rem;
+  transition: background 0.15s;
+}
+.search-suggestion:hover {
+  background: #232a34;
+}
+.suggestion-code {
+  font-weight: 700;
+  color: #a4161a;
+}
+.suggestion-name {
+  color: #fff8;
+  font-size: 0.98rem;
+}
+
+.added-courses-list {
+  margin-top: 2rem;
+}
+
+.added-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  color: #a4161a;
+}
+
+.added-course {
+  background: #181c24;
+  border-radius: 0.7rem;
+  padding: 0.7rem 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px 0 #0002;
+}
+
+.footer {
+  text-align: center;
+  color: #fff8;
+  font-size: 1rem;
+  padding: 1.5rem 0 0.7rem 0;
+  margin-top: auto;
+}
+
+.schedule-section {
+  margin-top: 1.5rem;
+}
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.schedule-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f3f4f8;
+}
+.schedule-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.cycle-btn {
+  background: #232a34;
+  color: #a4161a;
+
+  border: 1px solid #444;
+  border-radius: 0.5rem;
+  
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.cycle-btn:disabled {
+  color: #555;
+  cursor: not-allowed;
+}
+.cycle-btn:hover:not(:disabled) {
+  background: #181c24;
+  color: #fff;
+}
+.schedule-index {
+  color: #fff8;
+  font-size: 1rem;
+}
+.schedule-table-wrapper {
+  overflow-x: auto;
+  background: #181c24;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px 0 #0002;
+  padding: 1.2rem 0.5rem 0.5rem 0.5rem;
+}
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 700px;
+}
+.schedule-table th, .schedule-table td {
+  text-align: center;
+  padding: 0.5rem 0.3rem;
+  border-bottom: 1px solid #232a34;
+}
+.schedule-table th {
+  color: #a4161a;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: #232a34;
+}
+.time-col {
+  color: #fff8;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #232a34;
+}
+.has-course {
+  background: #a4161a22;
+  border-radius: 0.6rem;
+  position: relative;
+}
+.course-block {
+  background: #a4161a;
+  color: #fff;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  margin: 0.1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px 0 #0002;
+}
+.course-code {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.course-name {
+  font-size: 0.95rem;
+  color: #fff8;
+}
+@media (max-width: 600px) {
+  .utility-card {
+    padding: 1.2rem 0.5rem;
+    min-width: unset;
+  }
+}
+@media (max-width: 900px) {
+  .schedule-table {
+    min-width: 500px;
+    font-size: 0.95rem;
+  }
+}

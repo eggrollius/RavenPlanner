@@ -10,6 +10,14 @@ import json
 import time
 import os
 
+semester = 'Summer'
+
+semester_lookup = {
+    'Summer': 'Summer 2025 (May-August)',
+    'Fall': 'Fall 2025 (September-December)',
+    'Winter': 'Winter 2026 (January-April)'
+}
+
 username = os.environ.get('CARLETON_CENTRAL_USERNAME')
 password = os.environ.get('CARLETON_CENTRAL_PASSWORD')
 if not username or not password:
@@ -23,8 +31,10 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--window-size=1920,1080")
 
-# Start Chrome
-driver = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Remote(
+    command_executor="http://selenium:4444/wd/hub",
+    options=chrome_options
+)
 
 # Goto the login page
 driver.get('https://central.carleton.ca/')
@@ -52,7 +62,7 @@ buildTimeTable.click()
 # Select Term
 dropdown_element = wait.until(EC.presence_of_element_located((By.ID, 'term_code')))
 dropdown = Select(dropdown_element)
-dropdown.select_by_visible_text('Summer 2025 (May-August)')
+dropdown.select_by_visible_text(semester_lookup[semester])
 
 # Proceed to Search
 time.sleep(3)
@@ -86,6 +96,8 @@ for subject in subjects:
     wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]')))
     submitButton = driver.find_element(By.XPATH, '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]')
     driver.execute_script(f"document.getElementById('subj_id').value = '{subject}';")
+
+    wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]')))
     submitButton.click()
 
     # Wait for the page to load
@@ -132,22 +144,24 @@ for subject in subjects:
             course["instructor"] = tds[11].get_text(strip=True)
             #print("got:", course["course_code"], course["section"], "'s general info")
         elif 'Meeting Date:' in tds[1].text:
-            meeting_infos = {}
+            meetings = []
 
+            meeting = {}
             text_content = tds[1].text; #second column
             # Extract Meeting Date
-            meeting_infos["meeting_date"] = text_content.split("Meeting Date:")[1].split("Days:")[0].strip()
+            meeting["meeting_date"] = text_content.split("Meeting Date:")[1].split("Days:")[0].strip()
             # Extract Days
-            meeting_infos["days"] = text_content.split("Days:")[1].split("Time:")[0].strip()
+            meeting["days"] = text_content.split("Days:")[1].split("Time:")[0].strip()
             # Extract Time
-            meeting_infos["time"] = text_content.split("Time:")[1].split("Building:")[0].strip()
+            meeting["time"] = text_content.split("Time:")[1].split("Building:")[0].strip()
             # Extract Building
-            meeting_infos["building"] = text_content.split("Building:")[1].split("Room:")[0].strip()
+            meeting["building"] = text_content.split("Building:")[1].split("Room:")[0].strip()
             # Extract Room
-            meeting_infos["room"] = text_content.split("Room:")[1].strip()
+            meeting["room"] = text_content.split("Room:")[1].strip()
 
-            course["meeting_infos"] = meeting_infos
-            #print("got:", course["course_code"], course["section"], "'s meeting info")
+            meetings.append(meeting)
+
+            course["meetings"] = meetings
 
         elif 'Also Register in:' in tds[1].text:
             td = tds[1]
@@ -187,11 +201,12 @@ for course in courses:
     for key in expected_keys:
         if key not in course:
             if key == 'term':
-                course[key] = 'SUMMER'
+                course[key] = 'FALL'
             elif key == 'year':
                 course[key] = 2025      
             else:
                 course[key] = ''
+    """
     try:
         response = api_client.check_course_exists_by_crn(course["crn"])
         if response["exists"]:
@@ -206,7 +221,14 @@ for course in courses:
         # Handle exceptions (if any)
         print(f"An error occurred while processing course with CRN {course['crn']}: {e}")
         failed_operations += 1  # Increment failed operations counter
-
+    """
+    try:
+        api_client.create_or_update_course(course)
+        successful_updates += 1
+    except Exception as e:
+        # Handle exceptions (if any)
+        print(f"An error occurred while processing course with CRN {course['crn']}: {e}")
+        failed_operations += 1  # Increment failed operations counter
 # Print out the results
 print(f"Successfully updated {successful_updates} courses.")
 print(f"Successfully added {successful_additions} new courses.")

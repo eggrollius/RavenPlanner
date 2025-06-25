@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  selenium:
+    image: selenium/standalone-chrome
+    ports:
+      - "4444:4444"
+
+  scraper:
+    build: .
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    container_name: ravenplanner-scraper
+    depends_on:
+      - selenium
+    environment:
+      CARLETON_CENTRAL_USERNAME: ${CARLETON_CENTRAL_USERNAME}
+      CARLETON_CENTRAL_PASSWORD: ${CARLETON_CENTRAL_PASSWORD}
+    volumes:
+      - .:/app
+    working_dir: /app
+    entrypoint: ["sh", "-c", "sleep 5 && python scrape.py"]

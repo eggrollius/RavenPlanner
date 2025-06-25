@@ -1,7 +1,21 @@
 import requests
 import json
 
-BASE_URL = "https://www.ravenplanner.ca/api"
+BASE_URL = "https://reimagined-chainsaw-xxggqwrgp592vr4x-8000.app.github.dev"
+
+def create_or_update_course(course_data):
+    url = f"{BASE_URL}/course"
+    print(f"Request URL: {url}")
+    print(f"Request Data: {course_data}")
+    
+    response = requests.put(url, json=course_data)
+    print(f"Response Status Code: {response.status_code}")
+    print(f"Response Content: {response.text}")
+    
+    # Check if the response is successful (status code 2xx)
+    response.raise_for_status()
+    
+    return response.json()
 
 def add_course(course_data):
     url = f"{BASE_URL}/course"
