@@ -54,6 +54,7 @@ wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="submitButton"]')))
 loginButton = driver.find_element(By.XPATH, '//*[@id="submitButton"]')
 loginButton.click()
 
+# TODO: Script will fail if the login fails, need to handle that.
 # Navigate to Time Table
 wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]')))
 buildTimeTable = driver.find_element(By.XPATH, '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]')
