@@ -11,7 +11,8 @@ class Meeting(Base):
 
     meeting_date = Column(String(50))
     days = Column(String(50))
-    time = Column(String(50))
+    start_time = Column(String(50))
+    end_time = Column(String(50))
     building = Column(String(50))
     room = Column(String(50))
 

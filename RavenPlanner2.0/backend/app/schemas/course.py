@@ -19,7 +19,6 @@ class CourseCreate(CourseBase):
     meetings: List[MeetingCreate] = []
 
 class CourseRead(CourseBase):
-    id: int
     meetings: List[MeetingRead] = []
 
     class Config:

@@ -1,211 +1,165 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import './App.css';
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import '@fullcalendar/common/main.css';
 
-// Fake course data for demo
-const FAKE_COURSE_CODES = [
-  { code: 'COMP 1406', name: 'Introduction to Computer Science I' },
+// Course codes for search/suggestions
+const COURSE_CODES = [
+  { code: 'COMP 1405', name: 'Introduction to Computer Science I' },
   { code: 'MATH 1007', name: 'Elementary Calculus I' },
-]
-
-const FAKE_COURSES = [
-  {
-    code: 'COMP 1406',
-    name: 'Introduction to Computer Science I',
-    section: 'A',
-    type: 'Lecture',
-    instructor: 'Dr. Smith',
-    credits: 0.5,
-    semester: 'Summer',
-    year: 2025,
-    also_register_in: 'COMP 1406 A01',
-    meetings: [
-      {
-        days: ['Mon', 'Wed'],
-        times: [{"start": '10:05', "end": '11:25'}, {"start": '10:05', "end": '11:25'}],
-        building: 'HP',
-        room: '4155'
-      }
-    ],
-    child_sections: [
-      {
-        section: 'A01',
-        type: 'Tutorial',
-        instructor: 'TA John',
-        credits: 0,
-        semester: 'Summer',
-        year: 2025,
-        meetings: [
-          {
-            days: ['Fri'],
-            times: [{"start": '13:05', "end": '14:25'}],
-            building: 'HP',
-            room: '4155'
-          }
-        ]
-      },
-      {
-        section: 'A02',
-        type: 'Tutorial',
-        instructor: 'TA Bobby',
-        credits: 0,
-        semester: 'Summer',
-        year: 2025,
-        meetings: [
-          {
-            days: ['Thu'],
-            times: [{"start": '13:05', "end": '14:25'}],
-            building: 'HP',
-            room: '4155'
-          }
-        ]
-      }
-    ]
-  },
-    {
-    code: 'COMP 1406',
-    name: 'Introduction to Computer Science I',
-    section: 'B',
-    type: 'Lecture',
-    instructor: 'Dr. Dill',
-    credits: 0.5,
-    semester: 'Summer',
-    year: 2025,
-    also_register_in: 'COMP 1406 B01',
-    meetings: [
-      {
-        days: ['Tue', 'Fri'],
-        times: [{"start": '10:05', "end": '11:25'}, {"start": '10:05', "end": '11:25'}],
-        building: 'HP',
-        room: '4155'
-      }
-    ],
-    child_sections: [
-      {
-        section: 'B01',
-        type: 'Tutorial',
-        instructor: 'TA John',
-        credits: 0,
-        semester: 'Summer',
-        year: 2025,
-        meetings: [
-          {
-            days: ['Fri'],
-            times: [{"start": '13:05', "end": '14:25'}],
-            building: 'HP',
-            room: '4155'
-          }
-        ]
-      },
-      {
-        section: 'B02',
-        type: 'Tutorial',
-        instructor: 'TA Bobby',
-        credits: 0,
-        semester: 'Summer',
-        year: 2025,
-        meetings: [
-          {
-            days: ['Thu'],
-            times: [{"start": '13:05', "end": '14:25'}],
-            building: 'HP',
-            room: '4155'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    code: 'MATH 1007',
-    name: 'Elementary Calculus I',
-    section: 'A',
-    type: 'Lecture',
-    instructor: 'Dr. Lee',
-    credits: 0.5,
-    semester: 'Summer',
-    year: 2025,
-    also_register_in: '',
-    meetings: [
-      {
-        days: ['Tue', 'Thu'],
-        times: [{"start": '13:05', "end": '14:25'}, {"start": '13:05', "end": '14:25'}],
-        building: 'TB',
-        room: '202'
-      }
-    ],
-    child_sections: []
-  }
+  // Add more course codes as needed
 ];
 
-function generateFakeSchedules(courseInputs) {
-  function timeConflict(a, b) {
-    return a.day === b.day && !(a.end <= b.start || b.end <= a.start);
-  }
-
-  function expandSection(course) {
-    const combos = [];
-
-    course.meetings.forEach(parentMeeting => {
-      const parentSlots = parentMeeting.days.map((day, i) => ({
-        code: course.code,
-        section: course.section,
-        name: course.name,
-        day,
-        start: parentMeeting.times[i].start,
-        end: parentMeeting.times[i].end
-      }));
-
-      if (!course.child_sections || course.child_sections.length === 0) {
-        combos.push(parentSlots);
-      }
-
-      course.child_sections.forEach(child => {
-        child.meetings.forEach(childMeeting => {
-          const childSlots = childMeeting.days.map((day, i) => ({
-            code: course.code,
-            section: child.section,
-            name: course.name,
-            day,
-            start: childMeeting.times[i].start,
-            end: childMeeting.times[i].end
-          }));
-          combos.push([...parentSlots, ...childSlots]);
-        });
-      });
+async function generateSchedule(courses) {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/schedule', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        numCourses: courses.length,
+        requiredCourseCodes: courses.map(c => c.code),
+        optionalCourseCodes: [],
+        avoidProfs: [],
+        avoidSections: []
+      }),
     });
 
-    return combos;
-  }
-
-  // Step 1: for each input course, find all FAKE_COURSES that match the code
-  const allCourseOptions = courseInputs.map(({ code }) => {
-    const matchingSections = FAKE_COURSES.filter(c => c.code === code);
-    return matchingSections.flatMap(expandSection); // all possible versions
-  });
-
-  // Step 2: Backtrack to generate all conflict-free combinations
-  const validSchedules = [];
-
-  function backtrack(i, currentSchedule) {
-    if (i === allCourseOptions.length) {
-      validSchedules.push(currentSchedule);
-      return;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to generate schedule');
     }
 
-    for (const option of allCourseOptions[i]) {
-      const hasConflict = option.some(newSlot =>
-        currentSchedule.some(existingSlot => timeConflict(newSlot, existingSlot))
-      );
-      if (!hasConflict) {
-        backtrack(i + 1, [...currentSchedule, ...option]);
-      }
-    }
+    const data = await response.json();
+    return data.schedules;
+  } catch (error) {
+    console.error('Error generating schedule:', error);
+    return [];
   }
-
-  backtrack(0, []);
-  return validSchedules;
 }
 
+// Returns the day of the first Monday in the given month/year
+function getFirstMonday(year, month) {
+  const date = new Date(year, month, 1);
+  const day = date.getDay(); // 0 = Sunday, 1 = Monday, ...
+  const diff = (8 - day) % 7;
+  return addDays(date, diff).getDate();
+}
 
+function termToStartMonthIndexAndDay(term, year) {
+  let month, day;
+  switch (term.toLowerCase()) {
+    case 'fall':
+      month = 8; // September
+      break;
+    case 'winter':
+      month = 0; // January
+      break;
+    case 'summer':
+      month = 4; // May
+      break;
+    default:
+      month = -1;
+      day = -1;
+      console.Error('Bad term: ', term);
+      break;
+  }
+  if (month >= 0) {
+    day = getFirstMonday(year, month);
+  }
+
+  return [month, day];
+}
+
+function termToStartDate(year, term) {
+  let [month, day] = termToStartMonthIndexAndDay(term, year);
+
+  return new Date(year, month, day);
+}
+
+function addDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function meetingToDates(meeting) {
+  const dates = []
+  const baseDate = termToStartDate(meeting.year, meeting.term); // Guranteed to be a monday
+
+  for(const day of meeting.days.split(' ')) {
+    switch (day.toLowerCase()) {
+      case 'mon':
+      dates.push(addDays(baseDate, 0));
+        break;
+      case 'tue':
+        dates.push(addDays(baseDate, 1));
+        break;
+      case 'wed':
+        dates.push(addDays(baseDate, 2));
+        break;
+      case 'thu':
+        dates.push(addDays(baseDate, 3));
+        break;
+      case 'fri':
+        dates.push(addDays(baseDate, 4));
+        break;
+      case 'sat':
+        dates.push(addDays(baseDate, 5));
+        break;
+      case 'sun':
+        dates.push(addDays(baseDate, 6));
+        break;
+      default:
+        break;
+    }
+  }
+
+  return dates;
+}
+
+function scheduleToEvents(schedule) {
+  const events = []
+  for(const course of schedule) {
+    for(const meeting of course.meetings) {
+        const dates = meetingToDates(meeting);
+        for (const date of dates) {
+          const [startHour, startMinute] = meeting.start_time.split(':').map(Number);
+          const startDate = new Date(date);
+          startDate.setHours(startHour, startMinute, 0, 0); 
+
+          const [endHour, endMinute] = meeting.end_time.split(':').map(Number);
+          const endDate = new Date(date);
+          endDate.setHours(endHour, endMinute, 0, 0); 
+
+          events.push({
+            title: `${course.course_code} ${course.section}`,
+            start: startDate,
+            end: endDate
+          });
+        }
+    }
+  }
+
+  console.log(events);
+  return events;
+}
+
+function renderEventContent(eventInfo) {
+  const { event } = eventInfo;
+  return (
+    <div>
+      <b>{event.title}</b>
+      <div>
+        {event.start && event.end
+          ? `${event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : ''}
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [search, setSearch] = useState('');
@@ -213,14 +167,48 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeTab, setActiveTab] = useState('add');
   const [scheduleIdx, setScheduleIdx] = useState(0);
-  const schedules = useMemo(() => generateFakeSchedules(addedCourses), [addedCourses]);
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch schedules whenever added courses change
+  const fetchSchedules = useCallback(async () => {
+    if (addedCourses.length === 0) {
+      setSchedules([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const newSchedules = await generateSchedule(addedCourses);
+      
+      setSchedules(newSchedules);
+      setScheduleIdx(0);
+    } catch (err) {
+      setError('Failed to generate schedules. Please try again.');
+      setSchedules([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [addedCourses]);
+
+  // Trigger schedule generation when courses change
+  useMemo(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
+
   const currentSchedule = schedules[scheduleIdx] || [];
+  const events = useMemo(() => {
+    return scheduleToEvents(currentSchedule);
+  }, [currentSchedule]);
 
   // Filtered suggestions based on search
   const suggestions = useMemo(() => {
     if (!search.trim()) return [];
     const lower = search.toLowerCase();
-    return FAKE_COURSE_CODES.filter(
+    return COURSE_CODES.filter(
       c => c.code.toLowerCase().includes(lower) || c.name.toLowerCase().includes(lower)
     ).filter(c => !addedCourses.some(a => a.code === c.code));
   }, [search, addedCourses]);
@@ -229,7 +217,6 @@ function App() {
     if (!course) return;
     if (!addedCourses.some(c => c.code === course.code)) {
       setAddedCourses([...addedCourses, course]);
-      setScheduleIdx(0);
       setSearch('');
       setShowSuggestions(false);
     }
@@ -237,10 +224,14 @@ function App() {
 
   // Add by typing exact code and pressing Add
   const handleAddByText = () => {
-    const found = FAKE_COURSES.find(
+    const found = COURSE_CODES.find(
       c => c.code.toLowerCase() === search.trim().toLowerCase()
     );
     if (found) handleAddCourse(found);
+  };
+
+  const handleRemoveCourse = (courseCode) => {
+    setAddedCourses(addedCourses.filter(c => c.code !== courseCode));
   };
 
   return (
@@ -292,8 +283,16 @@ function App() {
               </div>
               <div className="added-courses-list">
                 {addedCourses.length > 0 && <div className="added-title">Added Courses</div>}
-                {addedCourses.map((course, idx) => (
-                  <div className="added-course" key={course.code}>{course.code} - {course.name}</div>
+                {addedCourses.map((course) => (
+                  <div className="added-course" key={course.code}>
+                    <span>{course.code} - {course.name}</span>
+                    <button 
+                      className="remove-course-btn"
+                      onClick={() => handleRemoveCourse(course.code)}
+                    >
+                      x
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -302,67 +301,69 @@ function App() {
             <div className="schedule-section">
               <div className="schedule-header">
                 <span className="schedule-title">Generated Schedule</span>
-                <div className="schedule-controls">
-                  <button className="cycle-btn" onClick={() => setScheduleIdx((scheduleIdx - 1 + schedules.length) % schedules.length)} disabled={schedules.length === 0}>⟨</button>
-                  <span className="schedule-index">{schedules.length > 0 ? `Schedule ${scheduleIdx + 1} of ${schedules.length}` : 'No schedules'}</span>
-                  <button className="cycle-btn" onClick={() => setScheduleIdx((scheduleIdx + 1) % schedules.length)} disabled={schedules.length === 0}>⟩</button>
-                </div>
+                {loading ? (
+                  <div className="loading-message">Generating schedules...</div>
+                ) : error ? (
+                  <div className="error-message">{error}</div>
+                ) : (
+                  <div className="schedule-controls">
+                    <button 
+                      className="cycle-btn" 
+                      onClick={() => setScheduleIdx((scheduleIdx - 1 + schedules.length) % schedules.length)} 
+                      disabled={schedules.length === 0}
+                    >
+                      ⟨
+                    </button>
+                    <span className="schedule-index">
+                      {schedules.length > 0 ? `Schedule ${scheduleIdx + 1} of ${schedules.length}` : 'No schedules'}
+                    </span>
+                    <button 
+                      className="cycle-btn" 
+                      onClick={() => setScheduleIdx((scheduleIdx + 1) % schedules.length)} 
+                      disabled={schedules.length === 0}
+                    >
+                      ⟩
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="schedule-table-wrapper">
-                <table className="schedule-table">
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Mon</th>
-                      <th>Tue</th>
-                      <th>Wed</th>
-                      <th>Thu</th>
-                      <th>Fri</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { start: '08:35', end: '09:55' },
-                      { start: '10:05', end: '11:25' },
-                      { start: '11:35', end: '12:55' },
-                      { start: '13:05', end: '14:25' },
-                      { start: '14:35', end: '15:55' },
-                      { start: '16:05', end: '17:25' },
-                      { start: '18:05', end: '19:25' },
-                      { start: '19:35', end: '20:55' },
-                      { start: '21:00', end: '22:00' },
-                    ].map(slot => (
-                      <tr key={slot.start + slot.end}>
-                        <td className="time-col">{slot.start} - {slot.end}</td>
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(day => {
-                          const course = currentSchedule.find(c => c.day === day && c.start === slot.start && c.end === slot.end);
-                          return (
-                            <td key={day} className={course ? 'has-course' : ''}>
-                              {course ? (
-                                <div className="course-block">
-                                  <span className="course-code">{course.code} {course.section}</span>
-                                  <span className="course-name">{course.name}</span>
-                                </div>
-                              ) : null}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="schedule-calendar-wrapper">
+                <FullCalendar
+                  key={scheduleIdx}
+
+                  plugins={[ timeGridPlugin ]}
+                  initialView='timeGridWeek'
+                  weekends={ false }
+                  events={ events }
+                  eventContent={ renderEventContent }
+
+                  allDaySlot={ false }
+                  nowIndicator={ false }
+
+                  initialDate={ '2025-09-02' }
+
+                  slotMinTime={ '08:30:00' }
+                  slotMaxTime={ '22:30:00' }
+                  slotDuration={ '00:30:00' }
+                  slotLabelFormat= {{
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    omitZeroMinute: false,
+                    meridiem: 'short'
+                  }}
+                />
               </div>
             </div>
           )}
           {activeTab === 'prefs' && (
             <div className="prefs-section">
-              <div style={{color:'#fff8',textAlign:'center',margin:'2rem 0'}}>Preferences coming soon...</div>
+              <div className="preferences-coming-soon">Preferences coming soon...</div>
             </div>
           )}
         </div>
       </main>
       <footer className="footer">
-        Copyright 2024, Ethan Huynh
+        Copyright 2025, Ethan Huynh
       </footer>
     </div>
   );

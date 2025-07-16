@@ -1,18 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-class MeetingBase(BaseModel):
+class Meeting(BaseModel):
     meeting_date: str
     days: str
     time: str
     building: str
     room: str
 
-class MeetingCreate(MeetingBase):
+class MeetingCreate(Meeting):
     pass
 
-class MeetingRead(MeetingBase):
-    id: int
-    course_id: int
+class MeetingRead(BaseModel):
+    crn: str
+    term: str
+    year: int
+    meeting_date: str
+    days: str
+    start_time: str
+    end_time: str
+    building: str
+    room: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

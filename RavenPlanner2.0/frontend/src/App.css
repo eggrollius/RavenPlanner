@@ -167,13 +167,29 @@
 }
 
 .added-course {
-  background: #181c24;
-  border-radius: 0.7rem;
-  padding: 0.7rem 1.2rem;
-  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  background: #333;
+  border-radius: 4px;
   color: #fff;
   font-size: 1.05rem;
   box-shadow: 0 2px 8px 0 #0002;
+}
+
+.remove-course-btn {
+  background: none;
+  border: none;
+  color: #f88;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+}
+
+.remove-course-btn:hover {
+  color: #f44;
 }
 
 .footer {
@@ -280,6 +296,18 @@
   font-size: 0.95rem;
   color: #fff8;
 }
+.loading-message {
+  color: #8f8;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.error-message {
+  color: #f88;
+  text-align: center;
+  margin: 1rem 0;
+}
+
 @media (max-width: 600px) {
   .utility-card {
     padding: 1.2rem 0.5rem;
