@@ -18,7 +18,7 @@ Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the catalog exposed to the planner
 Start PostgreSQL (or set `DATABASE_URL`), then:
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -27,12 +27,18 @@ Vite serves the client and proxies `/api` to the API on port 5000. Production us
 ## Verification
 
 ```bash
-npm test
-npm run typecheck
-npm run build
+npm run validate
 ```
 
-The API tests run against an in-memory PostgreSQL-compatible database and exercise the legacy scraper lifecycle. Scheduler tests cover conflicts and valid schedule generation.
+`validate` is the single local and CI entry point for linting, type checking, unit and integration tests, and the production build. Use `npm test` for one test run or `npm run test:watch` while developing. The API tests run against an in-memory PostgreSQL-compatible database and exercise the legacy scraper lifecycle. Scheduler tests cover conflicts and valid schedule generation, and UI integration tests cover the primary course-planning flow.
+
+To build both production containers and smoke-test the API and rendered client with a real PostgreSQL instance, run:
+
+```bash
+npm run test:containers
+```
+
+The command always removes its containers and test volume when it finishes. CI runs both validation commands before changes can be merged.
 
 ## Legacy scraper
 

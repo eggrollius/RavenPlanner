@@ -1,7 +1,10 @@
-.git
-node_modules
-dist
-coverage
 .env
+.git
+.github
+coverage
+dist
 instance
-__pycache__
+node_modules
+npm-debug.log*
+**/__pycache__
+*.py[cod]

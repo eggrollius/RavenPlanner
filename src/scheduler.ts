@@ -1,4 +1,4 @@
-import type { Course, MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types';
+import type { MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types';
 
 const parseTime = (value: string) => {
   const [hours, minutes] = value.trim().split(':').map(Number);
