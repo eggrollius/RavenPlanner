@@ -1,0 +1,10 @@
+.env
+.git
+.github
+coverage
+dist
+instance
+node_modules
+npm-debug.log*
+**/__pycache__
+*.py[cod]
