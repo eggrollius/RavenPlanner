@@ -19,10 +19,6 @@
     },
     "ACTIVE_YEAR": {
       "value": "2025"
-    },
-    "PGSSLMODE": {
-      "description": "Require encrypted PostgreSQL connections with certificate verification. Supply a trusted database CA if needed.",
-      "value": "verify-full"
     }
   }
 }

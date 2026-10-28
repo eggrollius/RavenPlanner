@@ -12,14 +12,24 @@ describe('database connection configuration', () => {
     const client = new pg.Client(databaseConfig({ DATABASE_URL: connectionString, DYNO: 'web.1' }));
 
     expect(client.connectionParameters.database).toBe('planner');
-    expect(client.ssl).toBe(true);
+    expect(client.ssl).toEqual({ rejectUnauthorized: false });
   });
 
-  it('retains TLS certificate verification for Heroku connections', () => {
+  it('handles existing Heroku apps with PGSSLMODE still set to verify-full', () => {
     vi.stubEnv('PGSSLMODE', 'verify-full');
     const client = new pg.Client(databaseConfig({ DYNO: 'web.1' }));
 
-    expect(client.ssl).toBe(true);
+    expect(client.ssl).toEqual({ rejectUnauthorized: false });
+  });
+
+  it.each(['verify-full', 'disable'])('prevents URL sslmode=%s from replacing Heroku TLS settings', (sslmode) => {
+    const client = new pg.Client(databaseConfig({
+      DYNO: 'web.1',
+      DATABASE_URL: `postgresql://raven:password@database.example:5432/planner?sslmode=${sslmode}&application_name=raven`
+    }));
+
+    expect(client.ssl).toEqual({ rejectUnauthorized: false });
+    expect(client.connectionParameters.application_name).toBe('raven');
   });
 
   it('allows the local development database to run without TLS', () => {

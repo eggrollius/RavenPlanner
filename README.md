@@ -57,14 +57,19 @@ not change the existing app's settings when `main` deploys.
 Keep an existing database attachment: it supplies `DATABASE_URL`. Select the
 catalog with `ACTIVE_TERM` and `ACTIVE_YEAR`. `app.json` declares the buildpack,
 configuration defaults, and a paid PostgreSQL add-on for a new Heroku app.
-The server detects Heroku's `DYNO` environment variable and enables database TLS
-with certificate verification, including on existing apps where `app.json` settings
-are not applied automatically. Local development and Docker retain PostgreSQL's
-default SSL behavior. If the database
-certificate is not trusted by the runtime, provision its authoritative CA bundle
-and set `NODE_EXTRA_CA_CERTS` to its local path; do not disable verification. Validate
-`/api/health` and the planner after deployment. An empty database needs catalog
-data before course search returns results.
+The server detects Heroku's `DYNO` environment variable and uses the Heroku Postgres
+Node configuration: `ssl: { rejectUnauthorized: false }`. This requires an encrypted
+connection while accepting Heroku's database certificates, whose issuer isn't
+trusted by Node. It does not authenticate the database certificate. This Heroku
+configuration assumes `DATABASE_URL` comes from the Heroku Postgres add-on;
+revisit the trust configuration before switching to another database provider.
+The explicit configuration takes precedence over existing `PGSSLMODE` values and
+SSL parameters in `DATABASE_URL`, so existing apps need no config-var changes.
+Local development and Docker retain PostgreSQL's default SSL behavior.
+
+After deployment, check for `Raven Planner listening on ...` in the logs and
+validate `/api/health` and the planner. An empty database needs catalog data before
+course search returns results.
 
 The Python scraper runs separately with `RAVEN_API_URL` pointing to the Heroku
 app's `/api` endpoint. The web build does not install its Python dependencies.
