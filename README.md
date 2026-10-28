@@ -57,7 +57,10 @@ not change the existing app's settings when `main` deploys.
 Keep an existing database attachment: it supplies `DATABASE_URL`. Select the
 catalog with `ACTIVE_TERM` and `ACTIVE_YEAR`. `app.json` declares the buildpack,
 configuration defaults, and a paid PostgreSQL add-on for a new Heroku app.
-Database connections require TLS with certificate verification. If the database
+The server detects Heroku's `DYNO` environment variable and enables database TLS
+with certificate verification, including on existing apps where `app.json` settings
+are not applied automatically. Local development and Docker retain PostgreSQL's
+default SSL behavior. If the database
 certificate is not trusted by the runtime, provision its authoritative CA bundle
 and set `NODE_EXTRA_CA_CERTS` to its local path; do not disable verification. Validate
 `/api/health` and the planner after deployment. An empty database needs catalog
