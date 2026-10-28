@@ -10,10 +10,10 @@ type Row = Record<string, unknown> & { id: number; crn: string; section: string;
 
 const asMeetings = (value?: MeetingInput | MeetingInput[]) => value ? (Array.isArray(value) ? value : [value]) : [];
 async function transaction<T>(db: Queryable, work: (connection: Queryable) => Promise<T>): Promise<T> {
-  const connection: Queryable & { release?: () => void } = db.connect ? await db.connect() : db;
+  const connection = db.connect ? await db.connect() : db;
   try { await connection.query('BEGIN'); const result = await work(connection); await connection.query('COMMIT'); return result; }
   catch (error) { await connection.query('ROLLBACK'); throw error; }
-  finally { connection.release?.(); }
+  finally { if ('release' in connection) connection.release(); }
 }
 const value = (body: CourseInput, key: typeof courseColumns[number], term: string, year: number) => {
   if (key === 'term') return body.term || term;
@@ -25,7 +25,7 @@ const value = (body: CourseInput, key: typeof courseColumns[number], term: strin
 async function meetingsFor(db: Queryable, ids: number[]) {
   if (!ids.length) return new Map<number, MeetingInput[]>();
   const result = await db.query<MeetingInput & { course_id: number }>(
-    'SELECT course_id, meeting_date, days, time, building, room FROM meeting_infos WHERE course_id = ANY($1::int[]) ORDER BY id', [ids]
+    `SELECT course_id, meeting_date, days, time, building, room FROM meeting_infos WHERE course_id IN (${ids.map((_, index) => `$${index + 1}`).join(', ')}) ORDER BY id`, ids
   );
   const grouped = new Map<number, MeetingInput[]>();
   for (const row of result.rows) grouped.set(row.course_id, [...(grouped.get(row.course_id) || []), row]);
