@@ -2,23 +2,20 @@
 
 Raven Planner builds conflict-free Carleton University timetables. The application is a React + TypeScript client, a small Express API, and PostgreSQL. The existing Python scraper remains in `RavenData/` and its API contract is preserved.
 
-## Run with Docker
+## Deploy to Heroku
 
-```bash
-cp .env.example .env
-docker compose up --build
-```
+The repository is configured for Heroku's Node.js buildpack. Heroku runs `npm run build` during the build phase and starts the web dyno with the command in `Procfile`.
 
-Open <http://localhost:5000>. Compose runs exactly two services: `server` and `db`. PostgreSQL data is stored in the `raven-data` volume. The server creates its tables and indexes at startup.
+Attach Heroku Postgres so that `DATABASE_URL` is set, then configure `ACTIVE_TERM` and `ACTIVE_YEAR` for the catalog exposed to the planner. The server creates its tables and indexes when the dyno starts. `PORT` is supplied automatically by Heroku.
 
-Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the catalog exposed to the planner. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
+Automatic deploys can continue to target `main`. The `Validate` GitHub Actions workflow has a stable `validate` check that runs for pull requests and pushes to `main`; once the Heroku setting **Wait for GitHub checks to pass before deploy** is enabled, that check can gate automatic deployment.
 
 ## Local development
 
 Start PostgreSQL (or set `DATABASE_URL`), then:
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -27,12 +24,10 @@ Vite serves the client and proxies `/api` to the API on port 5000. Production us
 ## Verification
 
 ```bash
-npm test
-npm run typecheck
-npm run build
+npm run validate
 ```
 
-The API tests run against an in-memory PostgreSQL-compatible database and exercise the legacy scraper lifecycle. Scheduler tests cover conflicts and valid schedule generation.
+`validate` is the single local and CI entry point for linting, type checking, unit and integration tests, and the production build. Use `npm test` for one test run or `npm run test:watch` while developing. The API tests run against an in-memory PostgreSQL-compatible database and exercise the legacy scraper lifecycle. Scheduler tests cover conflicts and valid schedule generation, and UI integration tests cover the primary course-planning flow.
 
 ## Legacy scraper
 
