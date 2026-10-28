@@ -40,6 +40,32 @@ npm run test:containers
 
 The command always removes its containers and test volume when it finishes. CI runs both validation commands before changes can be merged.
 
+## Deploy to Heroku
+
+The app uses the Heroku Node.js buildpack on `heroku-24`. `Procfile` starts the
+Express server with `npm start`; `heroku-postbuild` compiles the server and client
+before Heroku prunes development dependencies. Node 22 is pinned in `package.json`.
+The server listens on Heroku's assigned `PORT` and creates its database schema at
+startup; the old Flask release and worker processes are no longer required.
+
+The existing Heroku app, `raven-planner`, automatically deploys the GitHub `main`
+branch. Merge the deployment changes into `main` to trigger a deployment; no
+Heroku CLI push is needed. The existing app must use the Node.js buildpack and a
+Node 22 compatible stack. `app.json` describes new apps and review apps; it does
+not change the existing app's settings when `main` deploys.
+
+Keep an existing database attachment: it supplies `DATABASE_URL`. Select the
+catalog with `ACTIVE_TERM` and `ACTIVE_YEAR`. `app.json` declares the buildpack,
+configuration defaults, and a paid PostgreSQL add-on for a new Heroku app.
+Database connections require TLS with certificate verification. If the database
+certificate is not trusted by the runtime, provision its authoritative CA bundle
+and set `NODE_EXTRA_CA_CERTS` to its local path; do not disable verification. Validate
+`/api/health` and the planner after deployment. An empty database needs catalog
+data before course search returns results.
+
+The Python scraper runs separately with `RAVEN_API_URL` pointing to the Heroku
+app's `/api` endpoint. The web build does not install its Python dependencies.
+
 ## Legacy scraper
 
 The scraper remains a separate Python utility. Its request and response shapes for create, update, existence checks, search, list, and delete are accepted by the new API. Set `RAVEN_API_URL` (for example, `http://localhost:5000/api`) to point it at a deployment; scraper behavior and payloads are otherwise unchanged.
