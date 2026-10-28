@@ -1,9 +1,9 @@
 import pg from 'pg';
 import { createApp } from './app.js';
+import { databaseConfig } from './database.js';
 import { ensureSchema } from './schema.js';
 
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://raven:raven@localhost:5432/ravenplanner';
-const pool = new pg.Pool({ connectionString: databaseUrl });
+const pool = new pg.Pool(databaseConfig());
 await ensureSchema(pool);
 const port = Number(process.env.PORT || 5000);
 const server = createApp(pool).listen(port, '0.0.0.0', () => console.log(`Raven Planner listening on ${port}`));
