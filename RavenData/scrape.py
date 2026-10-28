@@ -9,6 +9,7 @@ import api_client
 import json
 import time
 import os
+import sys
 
 username = os.environ.get('CARLETON_CENTRAL_USERNAME')
 password = os.environ.get('CARLETON_CENTRAL_PASSWORD')

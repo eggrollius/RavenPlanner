@@ -1,7 +1,8 @@
 import requests
 import json
+import os
 
-BASE_URL = "https://www.ravenplanner.ca/api"
+BASE_URL = os.environ.get("RAVEN_API_URL", "https://www.ravenplanner.ca/api").rstrip("/")
 
 def add_course(course_data):
     url = f"{BASE_URL}/course"
