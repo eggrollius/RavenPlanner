@@ -21,6 +21,11 @@ const winter = 'term=WINTER&year=2027';
 const original = (await api(`/course/search?query=TEST+1000&${fall}`)).data.A.parent;
 assert.equal(original.id, 1);
 assert.equal(original.meeting_infos[0].room, 'Original room');
+// The live PHYS 1004 list is 335 characters; the legacy VARCHAR(255) rejected it.
+const registrationLinks = Array.from({ length: 24 }, (_, i) => `PHYS 1004 L${String(i + 1).padStart(2, '0')}`).join(',');
+assert.equal(registrationLinks.length, 335);
+await api(`/course/crn/migration-check?${fall}`, 'PUT', { also_register_in: registrationLinks });
+assert.equal((await api(`/course/search?query=TEST+1000&${fall}`)).data.A.parent.also_register_in, registrationLinks);
 
 for (const catalog of [{ term: 'WINTER', year: 2027 }, { term: 'SUMMER', year: 2026 }, { term: 'FALL', year: 2027 }]) {
   const body = { ...catalog, crn: 'migration-check', course_code: 'TEST 1000', section: 'A', instructor: catalog.term, meeting_infos: { room: catalog.term } };

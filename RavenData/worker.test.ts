@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readCredentials } from './scrape.js';
 import { refreshInterval, runWorker } from './worker.js';
 
 afterEach(() => {
@@ -9,15 +8,6 @@ afterEach(() => {
 });
 
 describe('worker lifecycle', () => {
-  it('reads the existing credential names and fails before launching Chrome when they are missing', () => {
-    vi.stubEnv('CARLETON_CENTRAL_USERNAME', undefined);
-    vi.stubEnv('CARLETON_CENTRAL_PASSWORD', undefined);
-    expect(() => readCredentials()).toThrow('CARLETON_CENTRAL_USERNAME and CARLETON_CENTRAL_PASSWORD must be set.');
-    vi.stubEnv('CARLETON_CENTRAL_USERNAME', 'test-user');
-    vi.stubEnv('CARLETON_CENTRAL_PASSWORD', 'test-password');
-    expect(readCredentials()).toEqual({ username: 'test-user', password: 'test-password' });
-  });
-
   it('defaults to a daily refresh and rejects intervals that would cause rapid timer overflows', () => {
     vi.stubEnv('RAVEN_SCRAPE_INTERVAL_SECONDS', undefined);
     expect(refreshInterval()).toBe(86_400_000);

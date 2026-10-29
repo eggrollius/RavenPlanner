@@ -9,10 +9,10 @@ import { publishCourses } from './publish.js';
 import { catalogFromCode, readCatalog } from '../server/catalog.js';
 import { createScrapeLogger, failureDetails, noLog, safePageUrl, type ScrapeLog } from './logging.js';
 
-const timetable = '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]';
-const submit = '/html/body/div[3]/form/table[2]/tbody/tr[5]/td/input[1]';
-const results = "div[width='1205'] > table[width='1200'] > tbody";
-const returnToSearch = '//input[@type="submit" and @value="Return to Search" and @title="Click to go back to the Search Criteria page"]';
+const timetableUrl = 'https://central.carleton.ca/prod/bwysched.p_select_term?wsea_code=EXT';
+const submit = 'input[type="submit"][value="Search"]';
+const results = 'form[action$="bwysched.p_list_sections_chk"] div[style*="overflow"] > table > tbody';
+const returnToSearch = 'input[type="submit"][value="Return to Search"]';
 
 export function browserWaitMs(value = process.env.RAVEN_BROWSER_WAIT_MS ?? '30000') {
   const milliseconds = Number(value);
@@ -83,10 +83,10 @@ async function waitForSearch(driver: WebDriver, log: ScrapeLog = noLog) {
   await waitForBrowser(driver, 'waiting for the subject search form or Return to Search button', async () => {
     try {
       const [subjects] = await driver.findElements(By.id('subj_id'));
-      const [button] = await driver.findElements(By.xpath(submit));
+      const [button] = await driver.findElements(By.css(submit));
       if (subjects && button && await subjects.isDisplayed() && await button.isDisplayed() && await button.isEnabled()) return true;
       if (!returning) {
-        const [back] = await driver.findElements(By.xpath(returnToSearch));
+        const [back] = await driver.findElements(By.css(returnToSearch));
         if (back && await back.isDisplayed() && await back.isEnabled()) {
           log('search.returning');
           await back.click();
@@ -101,6 +101,27 @@ async function waitForSearch(driver: WebDriver, log: ScrapeLog = noLog) {
   }, log);
 }
 
+export async function readSubjectResults(driver: WebDriver, subject: string, log: ScrapeLog = noLog) {
+  const result = await waitForBrowser(driver, `reading results for ${subject}`, async () => {
+    try {
+      // Inspect both markers in one DOM snapshot. Separate WebDriver calls can
+      // straddle navigation and mistake a populated result page for an empty one.
+      return await driver.executeScript<{ html: string } | null>(`
+        if (document.readyState !== 'complete') return null;
+        const table = document.querySelector(arguments[0]);
+        if (table) return { html: table.innerHTML };
+        if (document.querySelector(arguments[1])) return { html: '' };
+        return null;
+      `, results, returnToSearch) ?? false;
+    } catch (failure) {
+      if (transientElementFailure(failure)) return false;
+      throw failure;
+    }
+  }, log);
+  if (!result) throw new Error(`No result page for ${subject}`);
+  return result.html;
+}
+
 export async function scrapeSubjects(subjects: string[], scrapeSubject: (subject: string) => Promise<ScrapedCourse[]>, signal?: AbortSignal, log: ScrapeLog = noLog) {
   const courses: ScrapedCourse[] = [];
   const failedSubjects: string[] = [];
@@ -108,29 +129,30 @@ export async function scrapeSubjects(subjects: string[], scrapeSubject: (subject
     signal?.throwIfAborted();
     const started = Date.now();
     log('subject.started', { subject });
-    try {
-      const parsed = await scrapeSubject(subject);
-      courses.push(...parsed);
-      log('subject.completed', { subject, courses: parsed.length, elapsedMs: Date.now() - started });
-      console.log('----------------------');
-      console.log(`${subject} has ${parsed.length} classes`);
-    } catch (failure) {
-      signal?.throwIfAborted();
-      failedSubjects.push(subject);
-      log('subject.failed', { subject, elapsedMs: Date.now() - started, error: failureDetails(failure) });
-      console.error(`Skipping subject ${subject}: ${failure instanceof Error ? failure.message : failure}`);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const parsed = await scrapeSubject(subject);
+        courses.push(...parsed);
+        log('subject.completed', { subject, courses: parsed.length, attempts: attempt, elapsedMs: Date.now() - started });
+        console.log('----------------------');
+        console.log(`${subject} has ${parsed.length} classes`);
+        break;
+      } catch (failure) {
+        signal?.throwIfAborted();
+        if (attempt < 3) {
+          log('subject.retrying', { subject, attempt, error: failureDetails(failure) });
+          console.warn(`Retrying subject ${subject} after attempt ${attempt}: ${failure instanceof Error ? failure.message : failure}`);
+          continue;
+        }
+        failedSubjects.push(subject);
+        log('subject.failed', { subject, elapsedMs: Date.now() - started, error: failureDetails(failure) });
+        console.error(`Skipping subject ${subject}: ${failure instanceof Error ? failure.message : failure}`);
+      }
     }
   }
   console.log(`Subjects completed: ${subjects.length - failedSubjects.length}; failed: ${failedSubjects.length}${failedSubjects.length ? ` (${failedSubjects.join(', ')})` : ''}.`);
   log('subjects.completed', { completed: subjects.length - failedSubjects.length, failedSubjects, courses: courses.length });
-  return courses;
-}
-
-export function readCredentials() {
-  const username = process.env.CARLETON_CENTRAL_USERNAME;
-  const password = process.env.CARLETON_CENTRAL_PASSWORD;
-  if (!username || !password) throw new Error('Environment variables CARLETON_CENTRAL_USERNAME and CARLETON_CENTRAL_PASSWORD must be set.');
-  return { username, password };
+  return { courses, failedSubjects };
 }
 
 function onPath(name: string) {
@@ -176,43 +198,23 @@ export async function availableCatalogs(dropdown: Pick<Select, 'getOptions'>) {
   return catalogs.sort((a, b) => Number(b.termCode === preferred) - Number(a.termCode === preferred) || b.termCode.localeCompare(a.termCode));
 }
 
-async function openTimetable(driver: WebDriver, credentials: { username: string; password: string }, signal?: AbortSignal, log: ScrapeLog = noLog) {
-  const act = <T>(locator: Locator, action: (element: WebElement) => Promise<T>, clickable: boolean, description: string) => withFreshElement(driver, locator, action, clickable, description, log);
-  const click = (locator: Locator, description: string) => act(locator, (element) => element.click(), true, description);
+async function openTimetable(driver: WebDriver, signal?: AbortSignal, log: ScrapeLog = noLog) {
   signal?.throwIfAborted();
-  log('navigation.started', { page: 'https://central.carleton.ca/' });
-  await driver.get('https://central.carleton.ca/');
+  // The public timetable exposes the catalog without a student SSO session.
+  log('navigation.started', { page: timetableUrl });
+  await driver.get(timetableUrl);
   log('navigation.completed', { page: safePageUrl(await driver.getCurrentUrl()) });
-  // Reuse the signed-in session when switching terms or recovering navigation.
-  const needsLogin = await waitForBrowser(driver, 'waiting for the Carleton Central login form or signed-in timetable menu', async () => {
-    try {
-      if ((await driver.findElements(By.id('userNameInput'))).length) return { login: true };
-      if ((await driver.findElements(By.xpath(timetable))).length) return { login: false };
-      return false;
-    } catch (failure) {
-      if (transientElementFailure(failure)) return false;
-      throw failure;
-    }
-  }, log);
-  log('login.state', { loginRequired: Boolean(needsLogin && needsLogin.login) });
-  if (needsLogin && needsLogin.login) {
-    await act(By.id('userNameInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.username); }, true, 'entering the Carleton Central username');
-    await act(By.id('passwordInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.password); }, true, 'entering the Carleton Central password');
-    await click(By.id('submitButton'), 'submitting the Carleton Central login form');
-  }
-  await click(By.xpath(timetable), 'waiting for the signed-in timetable link');
+  await withFreshElement(driver, By.id('term_code'), async () => undefined, true, 'waiting for the public timetable term selector', log);
 }
 
-export async function scrapeCourses(driver: WebDriver, credentials: { username: string; password: string }, catalog = readCatalog(), signal?: AbortSignal, log: ScrapeLog = noLog): Promise<ScrapedCourse[]> {
+export async function scrapeCourses(driver: WebDriver, catalog = readCatalog(), signal?: AbortSignal, log: ScrapeLog = noLog) {
   const act = <T>(locator: Locator, action: (element: WebElement) => Promise<T>, clickable: boolean, description: string) => withFreshElement(driver, locator, action, clickable, description, log);
   const click = (locator: Locator, description: string) => act(locator, (element) => element.click(), true, description);
   const openSearch = async () => {
-    await openTimetable(driver, credentials, signal, log);
+    await openTimetable(driver, signal, log);
     await act(By.id('term_code'), (element) => selectCatalogTerm(new Select(element), catalog), false, 'selecting the catalog term');
     log('catalog.selected', { ...catalog });
-    await driver.sleep(3000);
-    await click(By.xpath('//*[@id="ws_div"]/input[1]'), 'opening the subject search form');
-    await driver.sleep(3000);
+    await click(By.css('input[type="submit"][value="Proceed to Search"]'), 'opening the subject search form');
     await waitForSearch(driver, log);
   };
 
@@ -233,16 +235,8 @@ export async function scrapeCourses(driver: WebDriver, credentials: { username: 
     const selected = await act(By.id('subj_id'), (element) => driver.executeScript('arguments[0].value = arguments[1]; return arguments[0].value;', element, subject), false, `selecting subject ${subject}`);
     if (selected !== subject) throw new Error(`Subject ${subject} is no longer available in the search form`);
     // Locate the button after selecting the subject, since the DOM may change.
-    await click(By.xpath(submit), `submitting the search for ${subject}`);
-    let html = '';
-    try {
-      html = await act(By.css(results), (element) => element.getAttribute('innerHTML'), false, `reading results for ${subject}`) ?? '';
-    } catch (failure) {
-      if (!(failure instanceof error.TimeoutError) && !(failure instanceof error.NoSuchElementError)) throw failure;
-      // A real empty-results page has a return button and no results table.
-      // Exhausted stale-element retries or an unexpected page are failures.
-      if ((await driver.findElements(By.css(results))).length || !(await driver.findElements(By.xpath(returnToSearch))).length) throw failure;
-    }
+    await click(By.css(submit), `submitting the search for ${subject}`);
+    const html = await readSubjectResults(driver, subject, log);
     // Retain parsed courses before navigating away, even if recovery later fails.
     return parseCourses(html);
   }, signal, log);
@@ -270,6 +264,7 @@ export async function scrapeCatalogs(catalogs: Awaited<ReturnType<typeof availab
   log('catalogs.completed', { completed, failed });
   if (!completed) throw new Error('No catalogs could be refreshed.');
   console.log(`Catalogs completed: ${completed}; failed: ${failed}.`);
+  if (failed) throw new Error(`${failed} of ${catalogs.length} catalogs could not be fully refreshed.`);
   return { completed, failed };
 }
 
@@ -279,7 +274,6 @@ export async function runScrape(signal?: AbortSignal, options: { dryRun?: boolea
   console.log(`RavenData debug log: ${file}`);
   log('scrape.started', { dryRun: Boolean(options.dryRun) });
   try {
-    const credentials = readCredentials();
     const catalog = readCatalog();
     signal?.throwIfAborted();
     log('browser.starting', { catalog, timeoutMs: browserWaitMs() });
@@ -291,22 +285,27 @@ export async function runScrape(signal?: AbortSignal, options: { dryRun?: boolea
     signal?.addEventListener('abort', abort, { once: true });
     try {
       signal?.throwIfAborted();
-      await openTimetable(driver, credentials, signal, log);
+      await openTimetable(driver, signal, log);
       const catalogs = await withFreshElement(driver, By.id('term_code'), (element) => availableCatalogs(new Select(element)), false, 'discovering available catalog terms', log);
       log('catalogs.loaded', { catalogs });
       let scrapedCourses = 0;
       const result = await scrapeCatalogs(catalogs, async (selectedCatalog) => {
-        const courses = await scrapeCourses(driver, credentials, selectedCatalog, signal, log);
+        const { courses, failedSubjects } = await scrapeCourses(driver, selectedCatalog, signal, log);
         signal?.throwIfAborted();
         scrapedCourses += courses.length;
+        let failedOperations = 0;
         if (options.dryRun) {
           console.log(`Dry run: scraped ${courses.length} courses for ${selectedCatalog.term} ${selectedCatalog.year}; publishing skipped.`);
           log('publish.skipped', { catalog: selectedCatalog, courses: courses.length, dryRun: true });
-          return;
+        } else {
+          log('publish.started', { catalog: selectedCatalog, courses: courses.length });
+          const published = await publishCourses(courses, undefined, (message) => { console.log(message); log('publish.message', { catalog: selectedCatalog, message }); }, selectedCatalog);
+          log('publish.completed', { catalog: selectedCatalog, ...published });
+          failedOperations = published.failedOperations;
         }
-        log('publish.started', { catalog: selectedCatalog, courses: courses.length });
-        const published = await publishCourses(courses, undefined, (message) => { console.log(message); log('publish.message', { catalog: selectedCatalog, message }); }, selectedCatalog);
-        log('publish.completed', { catalog: selectedCatalog, ...published });
+        if (failedSubjects.length || failedOperations) {
+          throw new Error(`Incomplete ${selectedCatalog.term} ${selectedCatalog.year} refresh: failed subjects: ${failedSubjects.join(', ') || 'none'}; failed publishing operations: ${failedOperations}.`);
+        }
       }, signal, log);
       log('scrape.completed', { ...result, scrapedCourses, dryRun: Boolean(options.dryRun), elapsedMs: Date.now() - started });
       return result;

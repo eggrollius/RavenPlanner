@@ -39,7 +39,6 @@ export class RavenApiClient {
     const response = await this.request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: encodePayload(course) });
     this.log(`Response Status Code: ${response.status}`);
     this.log(`Response Content: ${await response.clone().text()}`);
-    // Only creation called raise_for_status() in the Python API client.
     if (response.status >= 400) throw new Error(`${response.status} ${response.statusText} for url: ${url}`);
     return this.json(response);
   }
@@ -62,6 +61,7 @@ export class RavenApiClient {
     this.log(`Requesting URL: ${url}`);
     const response = await this.request(url);
     this.log(`Response Status Code: ${response.status}`);
+    if (response.status >= 400) throw new Error(`${response.status} ${response.statusText} for url: ${url}`);
     const result = await this.json(response, true);
     this.log(`Response JSON: ${JSON.stringify(result)}`);
     return result;
@@ -77,6 +77,7 @@ export class RavenApiClient {
     this.log(`Payload: ${JSON.stringify(course)}`);
     const response = await this.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: encodePayload(course) });
     this.log(`Response Status Code: ${response.status}`);
+    if (response.status >= 400) throw new Error(`${response.status} ${response.statusText} for url: ${url}`);
     const result = await this.json(response, true);
     this.log(`Response JSON: ${JSON.stringify(result)}`);
     return result;

@@ -86,7 +86,8 @@ export function parseCourses(html: string, log: (message: string) => void = cons
       course.course_name = required(cells.eq(5).find('a').first());
       course.credits = parseCredits(required(cells.eq(6)));
       course.type = required(cells.eq(7));
-      course.instructor = required(cells.eq(11));
+      // The public table has 11 columns; the signed-in table had 12.
+      course.instructor = required(cells.last());
     } else {
       const details = cells.eq(1);
       const content = text(details);
@@ -96,8 +97,9 @@ export function parseCourses(html: string, log: (message: string) => void = cons
           meeting_date: between(content, 'Meeting Date:', 'Days:'),
           days: between(content, 'Days:', 'Time:'),
           time: between(content, 'Time:', 'Building:'),
-          building: between(content, 'Building:', 'Room:'),
-          room: between(content, 'Room:'),
+          // Public results omit room assignments for some terms.
+          building: content.includes('Building:') ? between(content, 'Building:', 'Room:') : '',
+          room: content.includes('Room:') ? between(content, 'Room:') : '',
         };
       } else if (content.includes('Also Register in:')) {
         const anchor = details.find('a').toArray().find((node) => singleString($(node)) === 'Also Register in:');
