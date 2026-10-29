@@ -37,6 +37,36 @@ afterEach(() => {
 });
 
 describe('course planning flow', () => {
+  it.each(['Tutorial', 'Lab'])('removes invalid schedules when the only required %s is deselected and restores them when reselected', async (type) => {
+    const child: Course = {
+      ...course, id: 2, crn: '12346', section: 'A1', type,
+      meeting_infos: [{ ...course.meeting_infos[0], days: 'Tue', time: '12:00 - 13:00' }],
+    };
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(JSON.stringify(
+      url === '/api/catalog' ? catalogResponse : { data: { A: { parent: course, children: [child] } } },
+    )));
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText('Fall 2026');
+    await user.type(screen.getByLabelText('Department'), 'COMP');
+    await user.type(screen.getByLabelText('Course number'), '1405');
+    await user.click(screen.getByRole('button', { name: /Add course/ }));
+    expect(await screen.findByText('1 conflict-free option')).toBeInTheDocument();
+    expect(screen.getByText('A1 · 12:00')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: new RegExp(`${type} A1`) }));
+    expect(screen.getByRole('checkbox', { name: /Lecture A/ })).toBeChecked();
+    expect(screen.queryByText('1 conflict-free option')).not.toBeInTheDocument();
+    expect(screen.queryAllByText('A · 10:00')).toHaveLength(0);
+    expect(screen.queryByText('A1 · 12:00')).not.toBeInTheDocument();
+    expect(screen.getByText('No schedule to show yet')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: new RegExp(`${type} A1`) }));
+    expect(screen.getByText('1 conflict-free option')).toBeInTheDocument();
+    expect(screen.getAllByText('A · 10:00')).toHaveLength(2);
+    expect(screen.getByText('A1 · 12:00')).toBeInTheDocument();
+  });
+
   it('searches for a course, displays a schedule, and removes the course', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(JSON.stringify(url === '/api/catalog' ? catalogResponse : {
       status: 'success',
