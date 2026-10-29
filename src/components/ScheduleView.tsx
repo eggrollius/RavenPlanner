@@ -22,9 +22,10 @@ function SectionList({ courses, pending = false }: { courses: Course[]; pending?
   </section>;
 }
 
-function ScheduleResults({ schedules }: { schedules: ScheduleSection[][] }) {
+function ScheduleResults({ schedules, onSelect }: { schedules: ScheduleSection[][]; onSelect?: (schedule: ScheduleSection[]) => void }) {
   const [index, setIndex] = useState(0);
   const schedule = schedules[index];
+  const select = (next: number) => { setIndex(next); onSelect?.(schedules[next]); };
   const courses = schedule?.flatMap(scheduleCourses) || [];
   const unscheduled = courses.filter(isUnscheduled);
   const timed = courses.flatMap((course) => scheduledMeetings(course).map((meeting) => ({ course, meeting })));
@@ -34,9 +35,9 @@ function ScheduleResults({ schedules }: { schedules: ScheduleSection[][] }) {
     <div className="panel-heading">
       <div><p className="step-label">03 · Your schedules</p><h2>{schedules.length ? `${schedules.length} conflict-free option${schedules.length === 1 ? '' : 's'}` : 'Your week, at a glance'}</h2></div>
       {schedules.length > 0 && <div className="pager">
-        <button aria-label="Previous schedule" disabled={index === 0} onClick={() => setIndex(index - 1)}>←</button>
+        <button aria-label="Previous schedule" disabled={index === 0} onClick={() => select(index - 1)}>←</button>
         <span><b>{index + 1}</b> / {schedules.length}</span>
-        <button aria-label="Next schedule" disabled={index === schedules.length - 1} onClick={() => setIndex(index + 1)}>→</button>
+        <button aria-label="Next schedule" disabled={index === schedules.length - 1} onClick={() => select(index + 1)}>→</button>
       </div>}
     </div>
     {!schedule ? <div className="schedule-empty">
@@ -65,7 +66,7 @@ function ScheduleResults({ schedules }: { schedules: ScheduleSection[][] }) {
   </section>;
 }
 
-export function ScheduleView({ schedules }: { schedules: ScheduleSection[][] }) {
+export function ScheduleView({ schedules, onSelect }: { schedules: ScheduleSection[][]; onSelect?: (schedule: ScheduleSection[]) => void }) {
   const scheduleKey = schedules.map((schedule) => schedule.map(({ parent, child }) => `${parent.crn}:${child?.crn || ''}`).join(',')).join('|');
-  return <ScheduleResults key={scheduleKey} schedules={schedules} />;
+  return <ScheduleResults key={scheduleKey} schedules={schedules} onSelect={onSelect} />;
 }

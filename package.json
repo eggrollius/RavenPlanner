@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "benchmark:advisor": "node scripts/benchmark-advisor.mjs",
     "dev": "tsx scripts/dev.ts",
     "dev:external": "concurrently --kill-others \"tsx watch server/index.ts\" \"vite --host 0.0.0.0\"",
     "db:seed": "tsx scripts/dev.ts --seed",
@@ -24,6 +25,7 @@
     "heroku-postbuild": "npm run build"
   },
   "dependencies": {
+    "@wllama/wllama": "^3.8.1",
     "cheerio": "^1.2.0",
     "express": "^4.21.2",
     "pg": "^8.13.1",

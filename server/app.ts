@@ -32,6 +32,12 @@ async function meetingsFor(db: Queryable, ids: number[]) {
 export function createApp(db: Queryable, activeTerm = readCatalog().term, activeYear = readCatalog().year) {
   const app = express();
   app.disable('x-powered-by');
+  // SharedArrayBuffer enables CPU inference threads. Downloads use CORS.
+  app.use((_req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    next();
+  });
   app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/catalog', async (_req, res, next) => {

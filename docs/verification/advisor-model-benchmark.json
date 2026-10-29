@@ -1,0 +1,175 @@
+{
+  "date": "2026-10-29T06:41:05.866Z",
+  "runtimeSourceSHA256": "85cdd27938723a96c299585bd7b4bfca42cf42c0f5f4fe55fd6d677f5c1b65c5",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "model": "qwen",
+      "loadMs": 15630,
+      "threads": 2,
+      "cases": [
+        {
+          "name": "profile",
+          "ms": 51456,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "program": "CS",
+              "year": 4,
+              "daysOff": [
+                "Fri"
+              ],
+              "avoidInstructors": [
+                "X"
+              ],
+              "electiveQuery": "geology"
+            }
+          }
+        },
+        {
+          "name": "explicit-courses",
+          "ms": 30475,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "MATH 1007",
+                "ERTH 1006"
+              ],
+              "courseCount": 3
+            }
+          }
+        },
+        {
+          "name": "refinement",
+          "ms": 33082,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "keepCourses": [
+                "ERTH 1006"
+              ],
+              "lightDays": [
+                "Tue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "release",
+          "ms": 50421,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "allowDays": [
+                "Fri"
+              ],
+              "excludeInstructors": [
+                "X"
+              ],
+              "earliest": "10:00"
+            }
+          }
+        },
+        {
+          "name": "search",
+          "ms": 22284,
+          "pass": true,
+          "decision": {
+            "tool": "search",
+            "query": "geology"
+          }
+        }
+      ]
+    },
+    {
+      "model": "smol",
+      "loadMs": 6276,
+      "threads": 2,
+      "cases": [
+        {
+          "name": "profile",
+          "ms": 40308,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "program": "CS",
+              "year": 4,
+              "daysOff": [
+                "Fri"
+              ],
+              "avoidInstructors": [
+                "X"
+              ],
+              "electiveQuery": "geology"
+            }
+          }
+        },
+        {
+          "name": "explicit-courses",
+          "ms": 18731,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "MATH 1007",
+                "ERTH 1006"
+              ],
+              "courseCount": 3
+            }
+          }
+        },
+        {
+          "name": "refinement",
+          "ms": 18396,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "keepCourses": [
+                "ERTH 1006"
+              ],
+              "lightDays": [
+                "Tue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "release",
+          "ms": 27337,
+          "pass": true,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "allowDays": [
+                "Fri"
+              ],
+              "excludeInstructors": [
+                "X"
+              ],
+              "earliest": "10:00"
+            }
+          }
+        },
+        {
+          "name": "search",
+          "ms": 18167,
+          "pass": true,
+          "decision": {
+            "tool": "search",
+            "query": "geology"
+          }
+        }
+      ]
+    }
+  ]
+}
