@@ -211,7 +211,14 @@ cause startup to fail. `SIGTERM` and `SIGINT` stop the loop and close Chrome.
 Scale to `worker=0` to disable refreshing. Existing API access behavior is preserved.
 
 Browser actions reacquire elements while waiting, retrying stale or temporarily
-unavailable controls for up to ten seconds. Before each subject, the scraper
+unavailable controls for up to 30 seconds. Set `RAVEN_BROWSER_WAIT_MS` (1–300,000
+milliseconds) to adjust this limit for slower portal or SSO responses. Invalid
+values fail before Chrome starts. Timeout errors identify the browser step,
+current page URL (without credentials, query parameters or fragment), and page
+title. For example, a timeout waiting for the signed-in timetable link on an SSO
+page can indicate that sign-in has not completed; check for rejected credentials
+or an interactive sign-in requirement. A timeout alone does not establish which
+of these occurred. Before each subject, the scraper
 waits for the search form or returns to it; if that fails, it reopens the catalog
 in the current session. A failed subject is logged as `Skipping subject ...`, and
 the scraper continues to the next subject. Its final subject summary lists any
@@ -219,6 +226,12 @@ failures. Successful subjects are retained and published even when another
 subject fails; malformed individual courses are also skipped during publishing.
 Initial login or term-discovery errors still fail the run; failures within one
 catalog do not prevent other catalogs from refreshing.
+After investigating a failed run, restart the worker to retry immediately instead
+of waiting for the configured refresh interval:
+
+```bash
+heroku ps:restart worker --app raven-planner
+```
 
 ## RavenData scraper
 
@@ -244,6 +257,21 @@ For a one-time run, install Google Chrome/Chromium and a matching Chromedriver o
 npm run build
 npm run scrape
 ```
+
+For a live test that scrapes without publishing to the API, run:
+
+```bash
+npm run scrape -- --dry-run
+tail -f logs/scrape.jsonl
+```
+
+Every run appends timestamped JSON records to `logs/scrape.jsonl`, with a unique
+run ID, browser steps and durations, element retries, subject counts, recovery
+attempts, publishing summaries, and failure details. Set `RAVEN_SCRAPE_LOG_FILE`
+to choose another path. The log excludes entered credentials and URL tokens;
+it does not capture page HTML, cookies, or screenshots. Log files are ignored by
+Git. On Heroku the file is local to the dyno and disappears when it is replaced;
+the existing console output remains available through Heroku logs.
 
 Use `npm run scrape:dev` to run the TypeScript source during development. For
 nonstandard browser installations, set `GOOGLE_CHROME_BIN` and `CHROMEDRIVER_PATH`

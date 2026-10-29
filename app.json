@@ -40,6 +40,10 @@
     "RAVEN_SCRAPE_INTERVAL_SECONDS": {
       "description": "Wait between worker runs after each scrape finishes.",
       "value": "86400"
+    },
+    "RAVEN_BROWSER_WAIT_MS": {
+      "description": "Browser element wait timeout in milliseconds (1-300000).",
+      "value": "30000"
     }
   }
 }

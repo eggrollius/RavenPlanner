@@ -9,4 +9,5 @@ app/__pycache__/
 /.local
 /playwright-report
 /test-results
+/logs
 .DS_Store
