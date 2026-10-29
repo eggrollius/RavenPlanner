@@ -50,7 +50,7 @@ export default function App() {
     setError('');
     try {
       const sections = await searchCourse(code, catalog, controller.signal);
-      if (!controller.signal.aborted) setCourses((current) => [...current, { code, sections, disabled: new Set() }]);
+      if (!controller.signal.aborted) setCourses((current) => [{ code, sections, disabled: new Set() }, ...current]);
     } catch (reason) {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Something went wrong.');
     } finally {
@@ -74,7 +74,7 @@ export default function App() {
         {!catalog && <button onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Retry</button>}
         <button aria-label="Dismiss" onClick={() => setError('')}>×</button>
       </div>}
-      <CourseList courses={courses} onToggle={toggle} onRemove={(code) => setCourses((current) => current.filter((course) => course.code !== code))} />
+      <CourseList key={`courses-${key}`} courses={courses} onToggle={toggle} onRemove={(code) => setCourses((current) => current.filter((course) => course.code !== code))} />
       <PreferencesPanel value={preferences} onChange={setPreferences} />
       <ScheduleView key={key} schedules={schedules} />
     </main>
