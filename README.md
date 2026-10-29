@@ -25,8 +25,8 @@ socket adapter; use a full PostgreSQL server when testing database concurrency o
 deployment behavior. The local database is only reachable from this computer.
 
 Try adding **COMP 1405**, **MATH 1007**, and **PSYC 1001** together. Each of the
-three demo catalogs (fall, summer, and winter in the selected year) has 34 sections
-across these ten courses:
+three demo catalogs (fall, summer, and winter in the selected year) has 36 sections
+across these eleven courses:
 
 | Course | Sample data |
 | --- | --- |
@@ -36,10 +36,25 @@ across these ten courses:
 | PSYC 1001, ECON 1001 | Two lecture choices |
 | BUSI 1001, STAT 2507 | Evening and late-afternoon lectures |
 | CGSC 1001 | Online Unscheduled course with no fixed meeting time |
+| ERTH 1006 | Synthetic geology elective with Tuesday and Wednesday alternatives |
 
 The names, instructors, CRNs, dates, and times are development examples, not a
 live Carleton catalog. They include overlapping times and early/evening sections
 so you can test section selection, schedule pagination, and time preferences.
+
+## Local AI advisor
+
+Switch between **Manual planner** and **AI advisor** using the navigation above
+the planner. AI mode downloads a small model once, then interprets messages on
+your CPU using WebAssembly; no AI server, API key, or WebGPU is needed. It keeps
+its own conversation and planning state for each term and displays results in
+the same timetable component. Start with eligible course codes and preferences,
+then ask for changes such as “Make Tuesdays lighter, but keep my geology elective.”
+
+The advisor checks actual section data, time conflicts and linked tutorials.
+The catalog has no prerequisite or degree-audit information: the advisor asks
+for eligible courses and never infers graduation requirements from your year.
+See [setup, architecture, model benchmarks and verification](docs/local-advisor.md).
 Search uses an exact department and course number; other course codes return the
 normal “No course found” error.
 

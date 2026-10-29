@@ -35,22 +35,51 @@ export function meetingsConflict(left: MeetingInfo, right: MeetingInfo): boolean
 const meetings = (section: ScheduleSection) => scheduleCourses(section).flatMap(scheduledMeetings);
 const compatible = (schedule: ScheduleSection[], candidate: ScheduleSection) => schedule.every((existing) => meetings(existing).every((a) => meetings(candidate).every((b) => !meetingsConflict(a, b))));
 
-export function generateSchedules(selected: SelectedCourse[], preferences: Preferences): ScheduleSection[][] {
+export interface ScheduleSearchOptions {
+  maxNodes?: number;
+  maxResults?: number;
+  score?: (schedule: ScheduleSection[]) => number;
+}
+
+export function searchSchedules(selected: SelectedCourse[], preferences: Preferences, options: ScheduleSearchOptions = {}): { schedules: ScheduleSection[][]; truncated: boolean } {
   const choices = selected.map(({ sections, disabled }) => Object.values(sections).flatMap(({ parent, children }) => {
     if (disabled.has(parent.crn)) return [];
-    const availableChildren = children.filter((child) => !disabled.has(child.crn));
+    const availableChildren = children.filter((child) => !disabled.has(child.crn) && scheduledMeetings(parent).every((a) => scheduledMeetings(child).every((b) => !meetingsConflict(a, b))));
     // Only lectures without linked tutorials or labs may stand alone.
     return children.length ? availableChildren.map((child) => ({ parent, child })) : [{ parent }];
   }));
-  if (!choices.length || choices.some((choice) => !choice.length)) return [];
-  let schedules: ScheduleSection[][] = [[]];
-  for (const courseChoices of choices) schedules = schedules.flatMap((schedule) => courseChoices.filter((candidate) => compatible(schedule, candidate)).map((candidate) => [...schedule, candidate]));
+  if (!choices.length || choices.some((choice) => !choice.length)) return { schedules: [], truncated: false };
   const score = (schedule: ScheduleSection[]) => {
     const all = schedule.flatMap(meetings); let score = 0;
     if (preferences.beforeEnabled) score += all.filter((m) => (timeRange(m)?.[0] ?? Infinity) < parseTime(preferences.before)).length * 10;
     if (preferences.afterEnabled) score += all.filter((m) => (timeRange(m)?.[1] ?? -Infinity) > parseTime(preferences.after)).length * 10;
     if (preferences.prioritizeDaysOff) score += new Set(all.flatMap((m) => m.days.split(/\s+/).filter(Boolean))).size;
-    return score;
+    return score + (options.score?.(schedule) || 0);
   };
-  return schedules.sort((a, b) => score(a) - score(b));
+  const best: { schedule: ScheduleSection[]; score: number }[] = [];
+  let nodes = 0;
+  let truncated = false;
+  const visit = (schedule: ScheduleSection[], depth: number) => {
+    if (depth === choices.length) {
+      best.push({ schedule, score: score(schedule) });
+      if (options.maxResults && best.length > options.maxResults * 2) {
+        best.sort((a, b) => a.score - b.score);
+        best.length = options.maxResults;
+      }
+      return;
+    }
+    for (const candidate of choices[depth]) {
+      if (nodes >= (options.maxNodes ?? Infinity)) { truncated = true; return; }
+      nodes++;
+      if (compatible(schedule, candidate)) visit([...schedule, candidate], depth + 1);
+      if (truncated) return;
+    }
+  };
+  visit([], 0);
+  best.sort((a, b) => a.score - b.score);
+  return { schedules: best.slice(0, options.maxResults).map(({ schedule }) => schedule), truncated };
+}
+
+export function generateSchedules(selected: SelectedCourse[], preferences: Preferences): ScheduleSection[][] {
+  return searchSchedules(selected, preferences).schedules;
 }

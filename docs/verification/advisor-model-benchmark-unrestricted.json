@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-29T06:19:15.050Z",
+  "runtimeSourceSHA256": "8911bb7ed8437e96a117af85e71d30699b5bee83dfa3ff0db92fb42d3d793c5c",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "model": "qwen",
+      "loadMs": 7288,
+      "threads": 2,
+      "cases": [
+        {
+          "name": "profile",
+          "ms": 70262,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "ERTH 1006"
+              ],
+              "lightDays": [
+                "Fri"
+              ],
+              "avoidInstructors": [
+                "X"
+              ],
+              "earliest": "10:00",
+              "electiveQuery": "geology"
+            }
+          }
+        },
+        {
+          "name": "explicit-courses",
+          "ms": 21001,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "MATH 1007",
+                "ERTH 1006"
+              ],
+              "daysOff": [
+                "Fri"
+              ]
+            }
+          }
+        },
+        {
+          "name": "refinement",
+          "ms": 24221,
+          "pass": false,
+          "error": "Error: The local model returned an invalid tool argument. Please rephrase your request."
+        },
+        {
+          "name": "release",
+          "ms": 12751,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "allowDays": [
+                "Fri"
+              ],
+              "avoidInstructors": [
+                "X"
+              ],
+              "earliest": "10:00"
+            }
+          }
+        },
+        {
+          "name": "search",
+          "ms": 7855,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "keepCourses": [
+                "ERTH 1006"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "model": "smol",
+      "loadMs": 5564,
+      "threads": 2,
+      "cases": [
+        {
+          "name": "profile",
+          "ms": 83688,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "ERTH 1006"
+              ],
+              "daysOff": [
+                "Fri"
+              ],
+              "electiveQuery": "geology"
+            }
+          }
+        },
+        {
+          "name": "explicit-courses",
+          "ms": 27503,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "addCourses": [
+                "COMP 1405",
+                "ERTH 1006"
+              ],
+              "daysOff": [
+                "Fri"
+              ]
+            }
+          }
+        },
+        {
+          "name": "refinement",
+          "ms": 33451,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "lightDays": [
+                "Tue"
+              ],
+              "allowInstructors": [
+                "X"
+              ],
+              "earliest": "10:00"
+            }
+          }
+        },
+        {
+          "name": "release",
+          "ms": 22749,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "allowDays": [
+                "Fri"
+              ],
+              "avoidInstructors": [
+                "X"
+              ]
+            }
+          }
+        },
+        {
+          "name": "search",
+          "ms": 14201,
+          "pass": false,
+          "decision": {
+            "tool": "plan",
+            "patch": {
+              "electiveQuery": "geology"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

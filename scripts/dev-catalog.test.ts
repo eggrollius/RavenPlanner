@@ -52,7 +52,7 @@ describe('local PostgreSQL catalog and planner', () => {
       }
     }
     const list = await request(app).get('/api/courses').expect(200);
-    expect(list.body.courses).toHaveLength(34);
+    expect(list.body.courses).toHaveLength(36);
     await request(app).get('/api/health').expect(200, { status: 'ok' });
   });
 
@@ -62,7 +62,7 @@ describe('local PostgreSQL catalog and planner', () => {
     expect((await pool.query("SELECT instructor FROM courses WHERE course_code = 'COMP 1405' AND section = 'A'")).rows[0].instructor).toBe('Edited locally');
     await seedDevelopmentCatalog(pool, catalog, true);
     expect((await pool.query("SELECT instructor FROM courses WHERE course_code = 'COMP 1405' AND section = 'A'")).rows[0].instructor).toContain('(Demo)');
-    expect((await pool.query('SELECT COUNT(*) FROM meeting_infos')).rows[0].count).toBe('34');
+    expect((await pool.query('SELECT COUNT(*) FROM meeting_infos')).rows[0].count).toBe('36');
   });
 
   it('seeds another active term without CRN collisions or mixing catalogs', async () => {
@@ -72,7 +72,7 @@ describe('local PostgreSQL catalog and planner', () => {
     const response = await request(app).get('/api/course/search').query({ query: 'COMP 1405' }).expect(200);
     expect(response.body.data.A.parent).toMatchObject({ term: 'WINTER', year: 2027 });
     expect(response.body.data.A.parent.meeting_infos[0].meeting_date).toContain('Jan 06, 2027');
-    expect((await request(app).get('/api/courses')).body.courses).toHaveLength(34);
+    expect((await request(app).get('/api/courses')).body.courses).toHaveLength(36);
   });
 
   it('supports simultaneous API reads and a transactional write over the PostgreSQL connection', async () => {

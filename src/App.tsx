@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { getCatalog, searchCourse } from './api';
 import { CourseList } from './components/CourseList';
 import { CourseSearch } from './components/CourseSearch';
@@ -7,9 +7,11 @@ import { PreferencesPanel } from './components/PreferencesPanel';
 import { ScheduleView } from './components/ScheduleView';
 import { generateSchedules } from './scheduler';
 import type { Catalog, Preferences, SelectedCourse } from './types';
+const AdvisorPanel = lazy(() => import('./components/AdvisorPanel').then((module) => ({ default: module.AdvisorPanel })));
 
 const defaults: Preferences = { beforeEnabled: false, before: '09:00', afterEnabled: false, after: '18:00', prioritizeDaysOff: true };
 export default function App() {
+  const [mode, setMode] = useState<'manual' | 'ai'>('manual');
   const [catalog, setCatalog] = useState<Catalog>();
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [plans, setPlans] = useState<Record<string, SelectedCourse[]>>({});
@@ -68,6 +70,10 @@ export default function App() {
   return <>
     <Header catalog={catalog} catalogs={catalogs} onChange={changeCatalog} />
     <main>
+      <nav className="mode-nav" aria-label="Planning mode"><button type="button" aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual planner</button><button type="button" aria-pressed={mode === 'ai'} onClick={() => setMode('ai')}>AI advisor <span>Local</span></button></nav>
+      {mode === 'ai' && !catalog && <section className="panel">{error ? <div role="alert">{error} <button type="button" onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Retry catalog</button></div> : <p role="status">Loading course catalog…</p>}</section>}
+      {mode === 'ai' && catalog && <Suspense fallback={<div className="panel" role="status">Opening local advisor…</div>}><AdvisorPanel key={`advisor-${key}`} catalog={catalog} /></Suspense>}
+      <div hidden={mode !== 'manual'}>
       <CourseSearch onAdd={add} busy={busy} disabled={!catalog} />
       {error && <div className="alert" role="alert">
         {error}
@@ -77,6 +83,7 @@ export default function App() {
       <CourseList key={`courses-${key}`} courses={courses} onToggle={toggle} onRemove={(code) => setCourses((current) => current.filter((course) => course.code !== code))} />
       <PreferencesPanel value={preferences} onChange={setPreferences} />
       <ScheduleView key={key} schedules={schedules} />
+      </div>
     </main>
     <footer><b>Raven Planner</b><span>Plan smarter. Study better.</span><span>Not affiliated with Carleton University.</span></footer>
   </>;

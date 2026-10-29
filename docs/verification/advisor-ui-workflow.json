@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-29T07:00:36.095Z",
+  "model": "SmolLM2-360M-Instruct-Q4_K_M",
+  "runtime": "WASM CPU, 2 threads",
+  "automatedCommand": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium RAVEN_AI_E2E=1 npm run test:e2e",
+  "browserTestsPassed": 5,
+  "turns": [
+    {
+      "ms": 42683
+    },
+    {
+      "ms": 51727
+    },
+    {
+      "ms": 69018
+    }
+  ],
+  "tuesdayMinutesBefore": 180,
+  "tuesdayMinutesAfter": 90,
+  "fridayMeetings": 0,
+  "planRestoredAfterReload": {
+    "program": "CS",
+    "year": 4,
+    "courseCount": 3,
+    "courses": [
+      "COMP 1405",
+      "MATH 1007",
+      "ERTH 1006"
+    ],
+    "keepCourses": [
+      "ERTH 1006"
+    ],
+    "daysOff": [
+      "Fri"
+    ],
+    "preferredDaysOff": [],
+    "lightDays": [
+      "Tue"
+    ],
+    "avoidInstructors": [
+      "X"
+    ],
+    "excludeInstructors": [],
+    "earliest": "",
+    "latest": "",
+    "preferAfter": "",
+    "preferBefore": "",
+    "electiveQuery": "geology"
+  },
+  "externalAIRequestsDuringConversation": 0,
+  "browserPageErrors": 0,
+  "data": "Synthetic seeded development catalog; no prerequisite or degree eligibility validation"
+}

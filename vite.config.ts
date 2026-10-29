@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: { outDir: 'dist/client', emptyOutDir: false },
     server: {
+      headers: { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'require-corp' },
       port: Number(env.VITE_PORT || 5173),
       strictPort: true,
       watch: { ignored: ['**/.local/**'] },
