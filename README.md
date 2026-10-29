@@ -185,8 +185,7 @@ course search returns results.
    app's buildpacks, then deploy. The Chrome buildpack supplies matched `chrome`
    and `chromedriver` executables on `PATH`. Remove older separate Chrome and
    Chromedriver buildpacks if present.
-2. Set `CARLETON_CENTRAL_USERNAME` and `CARLETON_CENTRAL_PASSWORD` in the app's
-   config vars. Set `RAVEN_API_URL` to the deployed app's public `/api` URL if it
+2. Set `RAVEN_API_URL` to the deployed app's public `/api` URL if it
    differs from the default `https://www.ravenplanner.ca/api`. A worker dyno must
    use the public URL to reach the web dyno; it cannot use `localhost`.
    Existing `ACTIVE_TERM` and `ACTIVE_YEAR` settings continue to select the default
@@ -206,26 +205,26 @@ other terms can still refresh. The worker then waits 86,400 seconds (24 hours)
 after each completed or failed run. Set the optional `RAVEN_SCRAPE_INTERVAL_SECONDS`
 config var to change that wait. Runs are sequential and Chrome is closed after
 each run. Dyno restarts also trigger a run; this is an elapsed-time refresh loop,
-not a fixed wall-clock schedule. Missing credentials or invalid interval settings
-cause startup to fail. `SIGTERM` and `SIGINT` stop the loop and close Chrome.
+not a fixed wall-clock schedule. Invalid interval settings cause startup to fail.
+The scraper uses Carleton's public timetable and does not require student
+credentials. `SIGTERM` and `SIGINT` stop the loop and close Chrome.
 Scale to `worker=0` to disable refreshing. Existing API access behavior is preserved.
 
 Browser actions reacquire elements while waiting, retrying stale or temporarily
 unavailable controls for up to 30 seconds. Set `RAVEN_BROWSER_WAIT_MS` (1–300,000
-milliseconds) to adjust this limit for slower portal or SSO responses. Invalid
+milliseconds) to adjust this limit for slower portal responses. Invalid
 values fail before Chrome starts. Timeout errors identify the browser step,
 current page URL (without credentials, query parameters or fragment), and page
-title. For example, a timeout waiting for the signed-in timetable link on an SSO
-page can indicate that sign-in has not completed; check for rejected credentials
-or an interactive sign-in requirement. A timeout alone does not establish which
-of these occurred. Before each subject, the scraper
+title. Before each subject, the scraper
 waits for the search form or returns to it; if that fails, it reopens the catalog
 in the current session. A failed subject is logged as `Skipping subject ...`, and
-the scraper continues to the next subject. Its final subject summary lists any
-failures. Successful subjects are retained and published even when another
+the scraper continues to the next subject after up to three attempts. Its final
+subject summary lists any failures. Successful subjects are retained and published even when another
 subject fails; malformed individual courses are also skipped during publishing.
-Initial login or term-discovery errors still fail the run; failures within one
-catalog do not prevent other catalogs from refreshing.
+Initial navigation or term-discovery errors still fail the run; failures within one
+catalog do not prevent other catalogs from refreshing. Any exhausted subject
+retries, failed publishing operations, or failed catalogs make the overall run
+exit with a failure status, after retaining successful imports.
 After investigating a failed run, restart the worker to retry immediately instead
 of waiting for the configured refresh interval:
 
@@ -235,27 +234,33 @@ heroku ps:restart worker --app raven-planner
 
 ## RavenData scraper
 
-The TypeScript port retains the Python scraper's selectors, waits, subject order,
-course and meeting fields, registration-section parsing, missing-field defaults,
-and check-by-CRN followed by create-or-update flow. The existence check and
-update both include the scraped term and year, so a CRN reused in another catalog
+The scraper reads [Carleton's public timetable](https://central.carleton.ca/prod/bwysched.p_select_term?wsea_code=EXT),
+avoiding the student SSO redirect that can immediately expire automated sessions.
+It finds search controls by their labels and result tables by their form, rather
+than absolute page positions or pixel widths. It retains subject order, course
+and meeting fields, registration-section parsing, missing-field defaults, and
+the check-by-CRN followed by create-or-update flow. Public results have 11 course
+columns and may omit building and room assignments; these fields remain empty
+when unavailable. Empty subjects complete as soon as the result page arrives.
+
+The existence check and update both include the scraped term and year, so a CRN reused in another catalog
 is a separate course. The scraper reads the portal's term options and selects
 each supported term by code (`202630` for Fall 2026), so displayed labels and
 month ranges do not affect selection. `ACTIVE_TERM` (`WINTER`, `SUMMER`, or `FALL`)
 and `ACTIVE_YEAR` choose the default and scrape priority; the default is
 **Fall 2026**. Invalid settings fail before Chrome starts. Unavailable terms
 are skipped automatically, and existing stored catalogs remain accessible.
-Each course retains only its last meeting row, as before. The API client also
-preserves the original HTTP-error and invalid-JSON handling for each helper.
+Each course retains only its last meeting row, as before. API existence checks,
+creation, and CRN updates reject HTTP errors so failed writes are counted.
 Its ID-update helper still calls the legacy endpoint; the current Express API
 only implements updates by CRN, which is what the scraper uses.
 
 For a one-time run, install Google Chrome/Chromium and a matching Chromedriver on
-`PATH`, export the two credential variables and optionally `RAVEN_API_URL`, then:
+`PATH`, set `RAVEN_API_URL` to the target API, then:
 
 ```bash
 npm run build
-npm run scrape
+RAVEN_API_URL=http://127.0.0.1:5000/api npm run scrape
 ```
 
 For a live test that scrapes without publishing to the API, run:

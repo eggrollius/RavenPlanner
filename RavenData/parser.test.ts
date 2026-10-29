@@ -11,6 +11,22 @@ interface LegacyCase {
 }
 const cases = JSON.parse(readFileSync(new URL('./fixtures/legacy-cases.json', import.meta.url), 'utf8')) as LegacyCase[];
 
+describe('public timetable results', () => {
+  it('parses the live 11-column format and meetings without public room assignments', () => {
+    const html = readFileSync(new URL('./fixtures/public-results.html', import.meta.url), 'utf8');
+    const log = vi.fn();
+    expect(parseCourses(html, log)).toEqual([{
+      registration_status: 'Registration Closed', crn: '30001', course_code: 'ACCS 5001',
+      section: 'F', course_name: 'Critical Disability Studies', credits: 0.5,
+      type: 'Seminar', instructor: 'Kelly Fritsch', section_type: 'IN-PERSON',
+      meeting_infos: {
+        meeting_date: 'Sep 09, 2026 to Dec 11, 2026', days: 'Tue', time: '08:35 - 11:25', building: '', room: '',
+      },
+    }]);
+    expect(log).not.toHaveBeenCalled();
+  });
+});
+
 describe('Python parser field compatibility', () => {
   it.each(cases)('$name', ({ html, courses, payloads, logs }) => {
     const log = vi.fn();

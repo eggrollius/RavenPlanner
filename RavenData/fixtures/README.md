@@ -12,3 +12,8 @@ unknown rows, separators, and unterminated records. Keep these expectations fixe
 when changing the TypeScript parser. The parity test explicitly supplies the
 legacy `SUMMER` / `2025` configuration to preserve these original expectations;
 the current default catalog is Fall 2026. Python is not required to run the tests.
+
+`public-results.html` is the ACCS Fall 2026 result-table fragment retrieved from
+Carleton's public timetable on October 29, 2026. Link query strings were removed
+to exclude the temporary timetable session ID. It covers the public 11-column
+layout and meetings that omit building and room assignments.

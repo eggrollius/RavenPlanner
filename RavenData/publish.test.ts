@@ -67,10 +67,9 @@ describe('scraped course publishing', () => {
     await db.end();
   });
 
-  it('continues after errors and preserves the legacy success and failure counters', async () => {
+  it('continues after errors and counts rejected updates as failures', async () => {
     const request = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response('{"exists":true}'))
-      // The Python updater returned this JSON without raising for HTTP 500.
       .mockResolvedValueOnce(new Response('{"message":"failed"}', { status: 500 }))
       .mockResolvedValueOnce(new Response('invalid json'))
       .mockRejectedValueOnce(new Error('offline'))
@@ -79,10 +78,10 @@ describe('scraped course publishing', () => {
     const api = new RavenApiClient('https://example.test/api', request, vi.fn());
     const log = vi.fn();
     const courses = ['1', '2', '3', '4'].map((crn) => ({ crn, course_name: `Course ${crn}` }));
-    expect(await publishCourses(courses, api, log)).toEqual({ successfulUpdates: 1, successfulAdditions: 1, failedOperations: 2 });
+    expect(await publishCourses(courses, api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 3 });
     expect(request).toHaveBeenCalledTimes(6);
     expect(log.mock.calls.slice(-4)).toEqual([
-      ['Successfully updated 1 courses.'], ['Successfully added 1 new courses.'], ['2 operations failed.'], ['Done'],
+      ['Successfully updated 0 courses.'], ['Successfully added 1 new courses.'], ['3 operations failed.'], ['Done'],
     ]);
   });
 

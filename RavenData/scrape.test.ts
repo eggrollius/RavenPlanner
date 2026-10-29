@@ -1,7 +1,7 @@
 import { By, error, WebDriver, type WebElement } from 'selenium-webdriver';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readCatalog } from '../server/catalog.js';
-import { availableCatalogs, browserWaitMs, scrapeCatalogs, scrapeCourses, scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
+import { availableCatalogs, browserWaitMs, readSubjectResults, scrapeCatalogs, scrapeCourses, scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 
@@ -36,7 +36,7 @@ describe('Carleton term selection', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const catalogs = [readCatalog({}), readCatalog({ ACTIVE_TERM: 'WINTER', ACTIVE_YEAR: '2027' })];
     const scrape = vi.fn().mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue(undefined);
-    expect(await scrapeCatalogs(catalogs, scrape)).toEqual({ completed: 1, failed: 1 });
+    await expect(scrapeCatalogs(catalogs, scrape)).rejects.toThrow('1 of 2 catalogs could not be fully refreshed');
     expect(scrape.mock.calls.map(([catalog]) => catalog.term)).toEqual(['FALL', 'WINTER']);
     await expect(scrapeCatalogs(catalogs, vi.fn().mockRejectedValue(new Error('Offline')))).rejects.toThrow('No catalogs could be refreshed');
     const controller = new AbortController();
@@ -92,7 +92,7 @@ function pollingDriver(findElement: ReturnType<typeof vi.fn>) {
 }
 
 describe('browser timeouts', () => {
-  it('allows slower SSO responses by default and validates the configured limit', () => {
+  it('allows slower portal responses by default and validates the configured limit', () => {
     vi.stubEnv('RAVEN_BROWSER_WAIT_MS', undefined);
     expect(browserWaitMs()).toBe(30_000);
     vi.stubEnv('RAVEN_BROWSER_WAIT_MS', '60000');
@@ -146,34 +146,14 @@ describe('browser timeouts', () => {
     await expect(withFreshElement(driver, By.id('search'), (element) => element.click())).rejects.toThrow(`Page: ${url};`);
   });
 
-  it('identifies an unexpected landing page before attempting to enter credentials', async () => {
-    const driver = Object.assign(pollingDriver(vi.fn()), {
+  it('opens the public timetable without requiring student credentials and diagnoses a missing selector', async () => {
+    vi.stubEnv('CARLETON_CENTRAL_USERNAME', undefined);
+    vi.stubEnv('CARLETON_CENTRAL_PASSWORD', undefined);
+    const driver = Object.assign(pollingDriver(vi.fn().mockRejectedValue(new error.NoSuchElementError('missing'))), {
       get: vi.fn().mockResolvedValue(undefined),
-      findElements: vi.fn().mockResolvedValue([]),
     });
-    await expect(scrapeCourses(driver, { username: 'test-user', password: 'test-password' }, readCatalog({}))).rejects.toThrow('waiting for the Carleton Central login form or signed-in timetable menu');
-    expect(driver.findElement).not.toHaveBeenCalled();
-  });
-
-  it('identifies a sign-in that never reaches the timetable menu', async () => {
-    const field = {
-      isDisplayed: vi.fn().mockResolvedValue(true),
-      isEnabled: vi.fn().mockResolvedValue(true),
-      clear: vi.fn().mockResolvedValue(undefined),
-      sendKeys: vi.fn().mockResolvedValue(undefined),
-      click: vi.fn().mockResolvedValue(undefined),
-    };
-    const find = vi.fn(async (locator: By) => {
-      if (locator.using === 'xpath') throw new error.NoSuchElementError('missing timetable');
-      return field;
-    });
-    const driver = Object.assign(pollingDriver(find), {
-      get: vi.fn().mockResolvedValue(undefined),
-      findElements: vi.fn().mockResolvedValue([field]),
-    });
-    await expect(scrapeCourses(driver, { username: 'test-user', password: 'test-password' }, readCatalog({}))).rejects.toThrow('waiting for the signed-in timetable link');
-    expect(field.click).toHaveBeenCalledTimes(1);
-    expect(field.sendKeys.mock.calls).toEqual([['test-user'], ['test-password']]);
+    await expect(scrapeCourses(driver, readCatalog({}))).rejects.toThrow('waiting for the public timetable term selector');
+    expect(driver.get).toHaveBeenCalledExactlyOnceWith('https://central.carleton.ca/prod/bwysched.p_select_term?wsea_code=EXT');
   });
 });
 
@@ -231,8 +211,9 @@ describe('subject fault isolation', () => {
       if (subject === 'ACCS') throw new error.StaleElementReferenceError('stale element not found');
       return [{ crn: subject === 'COMP' ? '1' : '2', course_name: subject }];
     });
-    expect(await scrapeSubjects(['ACCS', 'COMP', 'MATH'], scrape)).toEqual([{ crn: '1', course_name: 'COMP' }, { crn: '2', course_name: 'MATH' }]);
-    expect(scrape.mock.calls.map(([subject]) => subject)).toEqual(['ACCS', 'COMP', 'MATH']);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(await scrapeSubjects(['ACCS', 'COMP', 'MATH'], scrape)).toEqual({ courses: [{ crn: '1', course_name: 'COMP' }, { crn: '2', course_name: 'MATH' }], failedSubjects: ['ACCS'] });
+    expect(scrape.mock.calls.map(([subject]) => subject)).toEqual(['ACCS', 'ACCS', 'ACCS', 'COMP', 'MATH']);
     expect(failure).toHaveBeenCalledWith('Skipping subject ACCS: stale element not found');
     expect(log).toHaveBeenLastCalledWith('Subjects completed: 2; failed: 1 (ACCS).');
   });
@@ -245,7 +226,23 @@ describe('subject fault isolation', () => {
       if (subject === 'MATH') throw new error.TimeoutError('Unable to return to search');
       return [{ crn: '1', course_name: 'Intro' }];
     });
-    expect(await scrapeSubjects(['COMP', 'ACCS', 'MATH'], scrape)).toEqual([{ crn: '1', course_name: 'Intro' }]);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(await scrapeSubjects(['COMP', 'ACCS', 'MATH'], scrape)).toEqual({ courses: [{ crn: '1', course_name: 'Intro' }], failedSubjects: ['ACCS', 'MATH'] });
+  });
+
+  it('retries a transient failure and retains the recovered courses exactly once', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const scrape = vi.fn().mockRejectedValueOnce(new error.TimeoutError('portal unavailable'))
+      .mockResolvedValueOnce([{ crn: '1', course_name: 'Recovered' }])
+      .mockResolvedValueOnce([{ crn: '2', course_name: 'Next' }]);
+    const log = vi.fn();
+    expect(await scrapeSubjects(['ACCS', 'COMP'], scrape, undefined, log)).toEqual({
+      courses: [{ crn: '1', course_name: 'Recovered' }, { crn: '2', course_name: 'Next' }], failedSubjects: [],
+    });
+    expect(scrape.mock.calls.map(([subject]) => subject)).toEqual(['ACCS', 'ACCS', 'COMP']);
+    expect(log).toHaveBeenCalledWith('subject.retrying', expect.objectContaining({ subject: 'ACCS', attempt: 1 }));
+    expect(log).toHaveBeenCalledWith('subject.completed', expect.objectContaining({ subject: 'ACCS', attempts: 2 }));
   });
 
   it('honors shutdown during a failed subject without starting the next subject', async () => {
@@ -258,5 +255,36 @@ describe('subject fault isolation', () => {
     await expect(scrapeSubjects(['ACCS', 'COMP'], scrape, controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
     expect(scrape).toHaveBeenCalledTimes(1);
     expect(failure).not.toHaveBeenCalled();
+  });
+});
+
+describe('subject result navigation', () => {
+  it('waits for navigation and reads the result markers in one DOM snapshot', async () => {
+    const driver = Object.assign(pollingDriver(vi.fn()), {
+      executeScript: vi.fn().mockResolvedValueOnce(null).mockResolvedValue({ html: '<tr>current courses</tr>' }),
+    });
+    expect(await readSubjectResults(driver, 'ACCS')).toBe('<tr>current courses</tr>');
+    expect(driver.executeScript).toHaveBeenCalledTimes(2);
+    expect(driver.executeScript).toHaveBeenCalledWith(
+      expect.stringContaining('table.innerHTML'),
+      expect.stringContaining('bwysched.p_list_sections_chk'),
+      'input[type="submit"][value="Return to Search"]',
+    );
+    expect(driver.findElement).not.toHaveBeenCalled();
+  });
+
+  it('accepts a completed empty-results page without exhausting the timeout', async () => {
+    const driver = Object.assign(pollingDriver(vi.fn()), {
+      executeScript: vi.fn().mockResolvedValue({ html: '' }),
+    });
+    expect(await readSubjectResults(driver, 'ACCS')).toBe('');
+    expect(driver.executeScript).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports an unexpected page instead of treating it as an empty subject', async () => {
+    const driver = Object.assign(pollingDriver(vi.fn()), {
+      executeScript: vi.fn().mockResolvedValue(null),
+    });
+    await expect(readSubjectResults(driver, 'ACCS')).rejects.toThrow('reading results for ACCS');
   });
 });

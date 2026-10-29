@@ -57,11 +57,11 @@ describe('legacy API client contract', () => {
     expect(new RavenApiClient().baseUrl).toBe('http://localhost:5000/api');
   });
 
-  it('raises HTTP errors only for course creation, as the Python client did', async () => {
+  it('raises HTTP errors for every request used by the publishing loop', async () => {
     const { api } = client(() => new Response('{"message":"failed"}', { status: 500 }));
     await expect(api.addCourse({ crn: '1' })).rejects.toThrow('500');
-    await expect(api.updateCourseByCrn('1', {})).resolves.toEqual({ message: 'failed' });
-    await expect(api.checkCourseExistsByCrn('1')).resolves.toEqual({ message: 'failed' });
+    await expect(api.updateCourseByCrn('1', {})).rejects.toThrow('500');
+    await expect(api.checkCourseExistsByCrn('1')).rejects.toThrow('500');
     await expect(api.getCourses()).resolves.toEqual({ message: 'failed' });
     await expect(api.searchCourse('COMP 1405')).resolves.toEqual({ message: 'failed' });
     await expect(api.updateCourseById(1, {})).resolves.toEqual({ message: 'failed' });

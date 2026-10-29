@@ -1,5 +1,5 @@
 import { pathToFileURL } from 'node:url';
-import { browserWaitMs, readCredentials, runScrape } from './scrape.js';
+import { browserWaitMs, runScrape } from './scrape.js';
 import { readCatalog } from '../server/catalog.js';
 
 export function refreshInterval(value = process.env.RAVEN_SCRAPE_INTERVAL_SECONDS ?? '86400') {
@@ -40,7 +40,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   process.once('SIGTERM', () => controller.abort());
   process.once('SIGINT', () => controller.abort());
   try {
-    readCredentials();
     readCatalog();
     browserWaitMs();
     await runWorker(controller.signal);
