@@ -9,6 +9,25 @@ function client(response = () => new Response('{"ok":true}', { status: 200 })) {
 }
 
 describe('legacy API client contract', () => {
+  it('sends an explicit term and year for every scoped helper', async () => {
+    const { api, request } = client();
+    const catalog = { term: 'WINTER', year: 2027 } as const;
+    await api.getCourses(catalog);
+    await api.searchCourse('COMP 1405', catalog);
+    await api.checkCourseExistsByCrn('12345', catalog);
+    await api.updateCourseByCrn('12345', { ...catalog, instructor: 'Ada' }, catalog);
+    await api.deleteCourseByCrn('12345', catalog);
+    await api.deleteCourseById(7, catalog);
+    expect(request.mock.calls.map(([url]) => String(url))).toEqual([
+      'https://example.test/api/courses?term=WINTER&year=2027',
+      'https://example.test/api/course/search?query=COMP+1405&term=WINTER&year=2027',
+      'https://example.test/api/course/exists/12345?term=WINTER&year=2027',
+      'https://example.test/api/course/crn/12345?term=WINTER&year=2027',
+      'https://example.test/api/course/crn/12345?term=WINTER&year=2027',
+      'https://example.test/api/course/7?term=WINTER&year=2027',
+    ]);
+  });
+
   it('uses the same URLs, verbs, query encoding, and JSON bodies for every helper', async () => {
     const { api, request } = client();
     const payload = { crn: '12345', meeting_infos: { days: 'Mon Wed' } };

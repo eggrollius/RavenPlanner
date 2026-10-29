@@ -18,11 +18,11 @@
       "value": "production"
     },
     "ACTIVE_TERM": {
-      "description": "Catalog term for the API and scraper: WINTER, SUMMER, or FALL.",
+      "description": "Default planner/API term and scrape priority: WINTER, SUMMER, or FALL. All offered terms are refreshed.",
       "value": "FALL"
     },
     "ACTIVE_YEAR": {
-      "description": "Catalog year for the API and scraper.",
+      "description": "Default planner/API year. Users can select all imported catalog years.",
       "value": "2026"
     },
     "CARLETON_CENTRAL_USERNAME": {

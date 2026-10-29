@@ -7,6 +7,7 @@
     "dev": "concurrently \"tsx watch server/index.ts\" \"vite --host 0.0.0.0\"",
     "build": "tsc -p tsconfig.server.json && tsc -p tsconfig.worker.json && vite build",
     "start": "node dist/server/index.js",
+    "migrate": "node dist/server/migrate.js",
     "scrape": "node dist/RavenData/scrape.js",
     "worker": "node dist/RavenData/worker.js",
     "scrape:dev": "tsx RavenData/scrape.ts",

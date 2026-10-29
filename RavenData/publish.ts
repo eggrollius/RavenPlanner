@@ -12,10 +12,10 @@ export async function publishCourses(courses: ScrapedCourse[], api = new RavenAp
       if (course.course_name === undefined) throw new Error('Missing course_name');
       log(`Creating course: '${course.course_name}`);
       const payload = coursePayload(course, catalog);
-      const response = await api.checkCourseExistsByCrn(payload.crn);
+      const response = await api.checkCourseExistsByCrn(payload.crn, catalog);
       if (!Object.hasOwn(response, 'exists')) throw new Error('Missing exists in course existence response');
       if (response.exists) {
-        await api.updateCourseByCrn(payload.crn, payload);
+        await api.updateCourseByCrn(payload.crn, payload, catalog);
         successfulUpdates += 1;
       } else {
         await api.addCourse(payload);

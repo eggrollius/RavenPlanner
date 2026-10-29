@@ -1,7 +1,7 @@
 import { By, error, type WebDriver, type WebElement } from 'selenium-webdriver';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readCatalog } from '../server/catalog.js';
-import { scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
+import { availableCatalogs, scrapeCatalogs, scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
 
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 
@@ -10,6 +10,41 @@ function option(value: string, label: string) {
 }
 
 describe('Carleton term selection', () => {
+  it('discovers all offered seasons and years, ignores other options, and refreshes the default first', async () => {
+    vi.stubEnv('ACTIVE_TERM', 'FALL');
+    vi.stubEnv('ACTIVE_YEAR', '2026');
+    const dropdown = { getOptions: vi.fn().mockResolvedValue([
+      option('', 'Select a term'), option('202630', 'Fall 2026'), option('202620', 'Summer 2026'),
+      option('202710', 'Winter 2027'), option('202630', 'Fall again'), option('202640', 'Other'),
+    ]) };
+    expect(await availableCatalogs(dropdown)).toEqual([
+      { term: 'FALL', year: 2026, termCode: '202630' },
+      { term: 'WINTER', year: 2027, termCode: '202710' },
+      { term: 'SUMMER', year: 2026, termCode: '202620' },
+    ]);
+  });
+
+  it('does not require the configured default to be offered, and fails clearly if no terms are available', async () => {
+    const dropdown = { getOptions: vi.fn().mockResolvedValue([option('202710', 'Winter 2027')]) };
+    expect(await availableCatalogs(dropdown)).toEqual([{ term: 'WINTER', year: 2027, termCode: '202710' }]);
+    dropdown.getOptions.mockResolvedValue([option('', 'Select a term')]);
+    await expect(availableCatalogs(dropdown)).rejects.toThrow('no supported catalog terms');
+  });
+
+  it('continues to other catalogs after a failure and stops on shutdown', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const catalogs = [readCatalog({}), readCatalog({ ACTIVE_TERM: 'WINTER', ACTIVE_YEAR: '2027' })];
+    const scrape = vi.fn().mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue(undefined);
+    expect(await scrapeCatalogs(catalogs, scrape)).toEqual({ completed: 1, failed: 1 });
+    expect(scrape.mock.calls.map(([catalog]) => catalog.term)).toEqual(['FALL', 'WINTER']);
+    await expect(scrapeCatalogs(catalogs, vi.fn().mockRejectedValue(new Error('Offline')))).rejects.toThrow('No catalogs could be refreshed');
+    const controller = new AbortController();
+    const interrupted = vi.fn(async () => { controller.abort(); throw new Error('Closed'); });
+    await expect(scrapeCatalogs(catalogs, interrupted, controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(interrupted).toHaveBeenCalledTimes(1);
+  });
+
   it('selects Fall 2026 by its value without depending on the displayed label', async () => {
     vi.stubEnv('ACTIVE_TERM', undefined);
     vi.stubEnv('ACTIVE_YEAR', undefined);

@@ -111,7 +111,7 @@ export function coursePayload(course: ScrapedCourse, catalog: Catalog = readCata
   return {
     registration_status: '', crn: '', course_code: '', section: '', course_name: '',
     credits: '' as number | string, type: '', instructor: '', also_register_in: '',
-    term: catalog.term, year: catalog.year,
     ...course,
+    term: catalog.term, year: catalog.year,
   };
 }

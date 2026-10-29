@@ -1,3 +1,5 @@
+import type { Catalog } from '../server/catalog.js';
+
 type JsonObject = Record<string, unknown>;
 type Log = (message: string) => void;
 
@@ -42,16 +44,21 @@ export class RavenApiClient {
     return this.json(response);
   }
 
-  async getCourses() {
-    return this.json(await this.request(`${this.baseUrl}/courses`));
+  private scoped(path: string, catalog?: Catalog) {
+    const suffix = catalog ? `${path.includes('?') ? '&' : '?'}${new URLSearchParams({ term: catalog.term, year: String(catalog.year) })}` : '';
+    return `${this.baseUrl}${path}${suffix}`;
   }
 
-  async searchCourse(query: string) {
-    return this.json(await this.request(`${this.baseUrl}/course/search?${new URLSearchParams({ query })}`));
+  async getCourses(catalog?: Catalog) {
+    return this.json(await this.request(this.scoped('/courses', catalog)));
   }
 
-  async checkCourseExistsByCrn(crn: string) {
-    const url = `${this.baseUrl}/course/exists/${crn}`;
+  async searchCourse(query: string, catalog?: Catalog) {
+    return this.json(await this.request(this.scoped(`/course/search?${new URLSearchParams({ query })}`, catalog)));
+  }
+
+  async checkCourseExistsByCrn(crn: string, catalog?: Catalog) {
+    const url = this.scoped(`/course/exists/${encodeURIComponent(crn)}`, catalog);
     this.log(`Requesting URL: ${url}`);
     const response = await this.request(url);
     this.log(`Response Status Code: ${response.status}`);
@@ -60,12 +67,12 @@ export class RavenApiClient {
     return result;
   }
 
-  async updateCourseById(id: string | number, course: JsonObject) {
-    return this.json(await this.request(`${this.baseUrl}/course/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: encodePayload(course) }));
+  async updateCourseById(id: string | number, course: JsonObject, catalog?: Catalog) {
+    return this.json(await this.request(this.scoped(`/course/${id}`, catalog), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: encodePayload(course) }));
   }
 
-  async updateCourseByCrn(crn: string, course: JsonObject) {
-    const url = `${this.baseUrl}/course/crn/${crn}`;
+  async updateCourseByCrn(crn: string, course: JsonObject, catalog?: Catalog) {
+    const url = this.scoped(`/course/crn/${encodeURIComponent(crn)}`, catalog);
     this.log(`Requesting URL: ${url}`);
     this.log(`Payload: ${JSON.stringify(course)}`);
     const response = await this.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: encodePayload(course) });
@@ -75,11 +82,11 @@ export class RavenApiClient {
     return result;
   }
 
-  async deleteCourseById(id: string | number) {
-    return this.json(await this.request(`${this.baseUrl}/course/${id}`, { method: 'DELETE' }));
+  async deleteCourseById(id: string | number, catalog?: Catalog) {
+    return this.json(await this.request(this.scoped(`/course/${id}`, catalog), { method: 'DELETE' }));
   }
 
-  async deleteCourseByCrn(crn: string) {
-    return this.json(await this.request(`${this.baseUrl}/course/crn/${crn}`, { method: 'DELETE' }));
+  async deleteCourseByCrn(crn: string, catalog?: Catalog) {
+    return this.json(await this.request(this.scoped(`/course/crn/${encodeURIComponent(crn)}`, catalog), { method: 'DELETE' }));
   }
 }

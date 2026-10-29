@@ -3,7 +3,7 @@ import { generateSchedules, meetingsConflict, timeRange } from './scheduler';
 import type { Course, MeetingInfo, SelectedCourse } from './types';
 
 const meeting = (days: string, time: string): MeetingInfo => ({ days, time, meeting_date: 'May 05, 2025 to Jun 16, 2025', building: '', room: '' });
-const course = (crn: string, code: string, section: string, info: MeetingInfo): Course => ({ id: Number(crn), crn, course_code: code, section, meeting_infos: [info], registration_status: 'Open', course_name: code, credits: 0.5, type: 'Lecture', instructor: '', also_register_in: '' });
+const course = (crn: string, code: string, section: string, info: MeetingInfo): Course => ({ term: 'SUMMER', year: 2025, id: Number(crn), crn, course_code: code, section, meeting_infos: [info], registration_status: 'Open', course_name: code, credits: 0.5, type: 'Lecture', instructor: '', also_register_in: '' });
 describe('scheduler', () => {
   it('parses valid time ranges and rejects incomplete values', () => {
     expect(timeRange(meeting('Mon', '09:30 - 11:00'))).toEqual([570, 660]);
