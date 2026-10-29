@@ -1,0 +1,265 @@
+{
+  "sourceCommit": "71766cfc49eb59961fd51358af47de8a865281eb",
+  "sourceHashes": [
+    {
+      "file": "RavenData/scrape.ts",
+      "sha256": "d07595d3f4bf412444f1441c9a931ffd2a8210cbcf10c1796e59d15c971ef1cf"
+    },
+    {
+      "file": "RavenData/parser.ts",
+      "sha256": "43f0d3e94bba06bcb38d6ce4cd7ec88c398bab8c101504b499e9e56434f532f0"
+    },
+    {
+      "file": "RavenData/api_client.ts",
+      "sha256": "8d01a46c74c3aa6b01ca2919f7f46be9a6968202e95783ac3ff4ea420c120b7c"
+    },
+    {
+      "file": "RavenData/publish.ts",
+      "sha256": "655e5ee9af4155b619891350020d078d5954070f6cc741fab394704c39733764"
+    },
+    {
+      "file": "RavenData/worker.ts",
+      "sha256": "ff0ce71dafb1eb16dcc8dba094073c5461d6436004747051ed37575630c98aa6"
+    },
+    {
+      "file": "server/schema.ts",
+      "sha256": "1487240752cbd7221e31e0fd16384a8f6ffa6df9c3a6d8cb773b8d7980c20e8a"
+    }
+  ],
+  "runId": "ded67099-4bec-437b-b6cb-60474d69878b",
+  "startedAt": "2026-10-29T05:29:36.492Z",
+  "completedAt": "2026-10-29T05:41:21.025Z",
+  "durationMs": 704534,
+  "command": "GOOGLE_CHROME_BIN=/usr/bin/chromium SE_CACHE_PATH=/tmp/raven-selenium RAVEN_API_URL=http://127.0.0.1:5000/api RAVEN_SCRAPE_LOG_FILE=/tmp/raven-clean.jsonl npm run scrape:dev",
+  "environment": {
+    "node": "v22.23.4",
+    "chromium": "154.0.8037.57",
+    "chromedriver": "154.0.8037.92",
+    "postgres": "17",
+    "api": "http://127.0.0.1:5000/api",
+    "database": "local Docker ravenplanner-dev-db-1/ravenplanner",
+    "initialCourses": 9415,
+    "baselineCatalogs": [
+      {
+        "term": "FALL",
+        "year": 2026,
+        "courses": 4221
+      },
+      {
+        "term": "SUMMER",
+        "year": 2026,
+        "courses": 1068
+      },
+      {
+        "term": "WINTER",
+        "year": 2027,
+        "courses": 4126
+      }
+    ],
+    "browserTlsVerification": true
+  },
+  "exitStatus": 0,
+  "catalogsCompleted": 3,
+  "catalogsFailed": 0,
+  "scrapedCourses": 9419,
+  "subjectRetries": [],
+  "catalogs": [
+    {
+      "catalog": {
+        "term": "FALL",
+        "year": 2026,
+        "termCode": "202630"
+      },
+      "startedAt": "2026-10-29T05:29:38.770Z",
+      "scrape": {
+        "completed": 142,
+        "failedSubjects": [],
+        "courses": 4221
+      },
+      "publish": {
+        "successfulAdditions": 0,
+        "successfulUpdates": 4221,
+        "failedOperations": 0
+      },
+      "completedAt": "2026-10-29T05:34:55.810Z",
+      "nonemptySubjects": 141
+    },
+    {
+      "catalog": {
+        "term": "WINTER",
+        "year": 2027,
+        "termCode": "202710"
+      },
+      "startedAt": "2026-10-29T05:34:55.810Z",
+      "scrape": {
+        "completed": 141,
+        "failedSubjects": [],
+        "courses": 4130
+      },
+      "publish": {
+        "successfulAdditions": 4,
+        "successfulUpdates": 4126,
+        "failedOperations": 0
+      },
+      "completedAt": "2026-10-29T05:39:09.719Z",
+      "nonemptySubjects": 140
+    },
+    {
+      "catalog": {
+        "term": "SUMMER",
+        "year": 2026,
+        "termCode": "202620"
+      },
+      "startedAt": "2026-10-29T05:39:09.719Z",
+      "scrape": {
+        "completed": 107,
+        "failedSubjects": [],
+        "courses": 1068
+      },
+      "publish": {
+        "successfulAdditions": 0,
+        "successfulUpdates": 1068,
+        "failedOperations": 0
+      },
+      "completedAt": "2026-10-29T05:41:21.025Z",
+      "nonemptySubjects": 102
+    }
+  ],
+  "databaseCounts": [
+    {
+      "term": "FALL",
+      "year": 2026,
+      "courses": 4221,
+      "meetings": 4219,
+      "with_section_type": 3996
+    },
+    {
+      "term": "SUMMER",
+      "year": 2026,
+      "courses": 1068,
+      "meetings": 1065,
+      "with_section_type": 761
+    },
+    {
+      "term": "WINTER",
+      "year": 2027,
+      "courses": 4130,
+      "meetings": 4120,
+      "with_section_type": 3915
+    }
+  ],
+  "dataIntegrity": {
+    "duplicate_catalog_crns": 0,
+    "missing_required_course_fields": 0,
+    "orphaned_meetings": 0
+  },
+  "migrationCheck": {
+    "column": {
+      "data_type": "text",
+      "character_maximum_length": null
+    },
+    "recoveredSections": [
+      {
+        "crn": "13599",
+        "course_code": "PHYS 1004",
+        "section": "A",
+        "registration_list_characters": 335
+      },
+      {
+        "crn": "13600",
+        "course_code": "PHYS 1004",
+        "section": "B",
+        "registration_list_characters": 335
+      },
+      {
+        "crn": "13601",
+        "course_code": "PHYS 1004",
+        "section": "C",
+        "registration_list_characters": 335
+      },
+      {
+        "crn": "13602",
+        "course_code": "PHYS 1004",
+        "section": "D",
+        "registration_list_characters": 335
+      }
+    ]
+  },
+  "apiChecks": [
+    {
+      "path": "/api/courses?term=FALL&year=2026",
+      "status": 200,
+      "courses": 4221
+    },
+    {
+      "path": "/api/courses?term=WINTER&year=2027",
+      "status": 200,
+      "courses": 4130
+    },
+    {
+      "path": "/api/courses?term=SUMMER&year=2026",
+      "status": 200,
+      "courses": 1068
+    },
+    {
+      "path": "/api/course/search?query=COMP%201405&term=FALL&year=2026",
+      "status": 200,
+      "lectureGroups": 4
+    }
+  ],
+  "republishChecks": [
+    {
+      "catalog": {
+        "term": "FALL",
+        "year": 2026,
+        "termCode": "202630"
+      },
+      "successfulUpdates": 4221,
+      "successfulAdditions": 0,
+      "failedOperations": 0,
+      "identicalAfterRepublish": true
+    },
+    {
+      "catalog": {
+        "term": "WINTER",
+        "year": 2027,
+        "termCode": "202710"
+      },
+      "successfulUpdates": 4130,
+      "successfulAdditions": 0,
+      "failedOperations": 0,
+      "identicalAfterRepublish": true
+    },
+    {
+      "catalog": {
+        "term": "SUMMER",
+        "year": 2026,
+        "termCode": "202620"
+      },
+      "successfulUpdates": 1068,
+      "successfulAdditions": 0,
+      "failedOperations": 0,
+      "identicalAfterRepublish": true
+    }
+  ],
+  "validation": {
+    "command": "npm run validate",
+    "exitStatus": 0,
+    "testFiles": 15,
+    "tests": 142,
+    "lint": "passed",
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "containers": {
+    "command": "npm run test:containers",
+    "exitStatus": 0,
+    "note": "Used port 15000 and a temporary Dockerfile/Compose override mounting the environment proxy CA as a BuildKit secret for npm; no repository Dockerfile changes."
+  },
+  "browserSnapshotCheck": {
+    "passed": true,
+    "check": "Real Chromium delayed navigation and streaming results retain both the first and last rows",
+    "time": "2026-10-29T05:19:25.637Z"
+  },
+  "logSha256": "74c01f7a824c3123c8534b58568718ebdc440d4c6c286d951a908fb8d2c410ed"
+}
