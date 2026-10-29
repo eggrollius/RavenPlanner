@@ -163,6 +163,34 @@ describe('course planning flow', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No course found matching the query');
   });
 
+  it('labels an unscheduled section in the picker and keeps it in the generated option alongside a scheduled tutorial', async () => {
+    const parent = { ...course, section_type: 'Online Unscheduled Section', meeting_infos: [] };
+    const child = { ...course, id: 2, crn: '12346', section: 'A1', type: 'Tutorial', section_type: 'Online Scheduled Section' };
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(JSON.stringify(url === '/api/catalog'
+      ? catalogResponse
+      : { status: 'success', data: { A: { parent, children: [child] } } })));
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText('Fall 2026');
+    await user.type(screen.getByLabelText('Department'), 'comp');
+    await user.type(screen.getByLabelText('Course number'), '1405');
+    await user.click(screen.getByRole('button', { name: /Add course/ }));
+
+    const card = await screen.findByRole('article', { name: 'COMP 1405' });
+    await user.click(within(card).getByText(course.course_name));
+    expect(screen.getByText(/Unscheduled · No fixed class time/)).toBeInTheDocument();
+    expect(screen.getByText('1 conflict-free option')).toBeInTheDocument();
+    const list = screen.getByRole('region', { name: 'Unscheduled classes 1' });
+    expect(within(list).getByText('Lecture A · CRN 12345')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Weekly calendar' })).getAllByText('A1 · 10:00')).toHaveLength(2);
+
+    await user.click(screen.getByRole('checkbox', { name: /Lecture A/ }));
+    expect(screen.queryByRole('region', { name: /Unscheduled classes/ })).not.toBeInTheDocument();
+    expect(screen.getByText('No schedule to show yet')).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: /Lecture A/ }));
+    expect(screen.getByRole('region', { name: 'Unscheduled classes 1' })).toBeInTheDocument();
+  });
+
   it('updates the displayed term from the API configuration', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({ term: 'WINTER', year: 2027, catalogs })));
     render(<App />);

@@ -5,7 +5,7 @@ import { parseCatalog, readCatalog, type Catalog } from './catalog.js';
 import { transaction } from './transaction.js';
 import type { CourseInput, MeetingInput, Queryable } from './types.js';
 
-const courseColumns = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'instructor', 'also_register_in', 'term', 'year'] as const;
+const courseColumns = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'section_type', 'instructor', 'also_register_in', 'term', 'year'] as const;
 const meetingColumns = ['meeting_date', 'days', 'time', 'building', 'room'] as const;
 
 type Row = Record<string, unknown> & { id: number; crn: string; section: string; meeting_infos?: MeetingInput[] };
@@ -15,6 +15,7 @@ const value = (body: CourseInput, key: typeof courseColumns[number], term: strin
   if (key === 'term') return term;
   if (key === 'year') return year;
   if (key === 'credits') return body.credits ?? 0;
+  if (key === 'section_type') return body.section_type ?? null;
   return body[key] ?? '';
 };
 

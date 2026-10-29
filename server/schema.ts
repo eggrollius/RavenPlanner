@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS meeting_infos (
   room VARCHAR(50) NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS meeting_infos_course_idx ON meeting_infos (course_id);
+-- A course row represents one lecture/tutorial section. Existing rows stay
+-- unknown until the scraper observes Section Information for that section.
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS section_type TEXT;
 `;
 
 export async function ensureSchema(db: Queryable): Promise<void> {

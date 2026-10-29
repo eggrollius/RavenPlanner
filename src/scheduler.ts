@@ -1,4 +1,11 @@
-import type { MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types';
+import type { Course, MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types';
+
+// Only an explicit delivery label establishes that a section is unscheduled.
+// Missing meeting times (including old catalog data) do not establish this.
+export const isUnscheduled = (course: Course): boolean => /^online\s+unscheduled\b/i.test(course.section_type?.trim() || '');
+
+export const scheduleCourses = (section: ScheduleSection): Course[] => section.child ? [section.parent, section.child] : [section.parent];
+export const scheduledMeetings = (course: Course): MeetingInfo[] => isUnscheduled(course) ? [] : course.meeting_infos;
 
 const parseTime = (value: string) => {
   const [hours, minutes] = value.trim().split(':').map(Number);
@@ -25,7 +32,7 @@ export function meetingsConflict(left: MeetingInfo, right: MeetingInfo): boolean
   return sameDay && leftDate[0] <= rightDate[1] && rightDate[0] <= leftDate[1] && leftTime[0] < rightTime[1] && rightTime[0] < leftTime[1];
 }
 
-const meetings = (section: ScheduleSection) => [...section.parent.meeting_infos, ...(section.child?.meeting_infos || [])];
+const meetings = (section: ScheduleSection) => scheduleCourses(section).flatMap(scheduledMeetings);
 const compatible = (schedule: ScheduleSection[], candidate: ScheduleSection) => schedule.every((existing) => meetings(existing).every((a) => meetings(candidate).every((b) => !meetingsConflict(a, b))));
 
 export function generateSchedules(selected: SelectedCourse[], preferences: Preferences): ScheduleSection[][] {

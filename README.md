@@ -24,6 +24,32 @@ npm run dev
 
 Vite serves the client and proxies `/api` to the API on port 5000. Production uses `npm run build` and `npm start`.
 
+## Unscheduled sections
+
+The scraper reads each lecture/tutorial's `Section Information` and publishes its
+delivery label as `section_type`. The API stores that label on the section's
+course row and returns it in search and catalog results, including sections with
+no meeting rows. On server startup, `ensureSchema` automatically adds the nullable
+column to existing databases before accepting requests. Existing records remain
+`NULL` until a scrape supplies their actual labels; there is no data backfill.
+A scrape without a label sends `null`, clearing any stale label, while API updates
+that omit the field preserve its current value.
+
+Both of Carleton's **Online Unscheduled** delivery types stay in generated
+schedule options but do not occupy calendar time or affect conflict checks and
+time/day preferences. Lectures and tutorials are classified independently. The
+course picker identifies unscheduled sections, and each generated option lists
+them above the calendar with course, section, CRN, and instructor. Missing delivery
+labels or meeting times do not establish that a section is unscheduled; sections
+with missing times are listed separately as awaiting meeting information.
+
+This presentation follows [Fleming College's timetable guidance](https://flemingcollege.ca/PDF/Orientation/timetable-tips.pdf)
+and [UW–La Crosse's Schedule Planner guidance](https://www.uwlax.edu/globalassets/offices-services/wings-help/students/class-schedule-in-calendar-view.pdf),
+which keep asynchronous classes in a visible list outside the calendar grid.
+[Carleton's delivery definitions](https://carleton.ca/registration/course-delivery-types/)
+also make clear that unscheduled coursework still has deadlines and may have
+in-person assessments; the list directs students to their course outlines.
+
 ## Verification
 
 ```bash

@@ -10,6 +10,7 @@ export interface ScrapedCourse {
   course_name?: string;
   credits?: number;
   type?: string;
+  section_type?: string | null;
   instructor?: string;
   meeting_infos?: MeetingInput;
   also_register_in?: string;
@@ -67,7 +68,14 @@ export function parseCourses(html: string, log: (message: string) => void = cons
 
   for (const row of $('tr').toArray()) {
     const cells = $(row).find('td');
-    if (cells.length <= 1) {
+    // Section details may be a single colspan cell, not just a two-cell row.
+    const sectionInfo = cells.toArray().map((cell) => text($(cell))).find((content) => content.includes('Section Information:'));
+    if (sectionInfo !== undefined) {
+      const label = sectionInfo.split('Section Information:')[1]
+        .replace(/^\s*(?:Section\s+Type\s*[-–—:]\s*)?/i, '')
+        .split('.')[0].replace(/\s+/g, ' ').trim();
+      if (label) course.section_type = label;
+    } else if (cells.length <= 1) {
       courses.push(course);
       course = {};
     } else if (cells.length > 2) {
@@ -98,7 +106,7 @@ export function parseCourses(html: string, log: (message: string) => void = cons
           const code = parts.slice(0, 2).join(' ');
           course.also_register_in = parts.slice(2).filter((section) => section !== 'or').map((section) => `${code} ${section}`).join(',');
         }
-      } else if (!content.includes('Section Information:')) {
+      } else {
         log('Cannot Classify Row');
       }
     }
@@ -111,6 +119,7 @@ export function coursePayload(course: ScrapedCourse, catalog: Catalog = readCata
   return {
     registration_status: '', crn: '', course_code: '', section: '', course_name: '',
     credits: '' as number | string, type: '', instructor: '', also_register_in: '',
+    section_type: null,
     ...course,
     term: catalog.term, year: catalog.year,
   };

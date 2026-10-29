@@ -56,12 +56,12 @@ describe('scraped course publishing', () => {
     if (!address || typeof address === 'string') throw new Error('Missing test server port');
     const api = new RavenApiClient(`http://127.0.0.1:${address.port}/api`, fetch, vi.fn());
     expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toEqual({ term, year, catalogs: [{ term, year }] });
-    const course = { crn: '12345', course_name: 'Intro', course_code: 'COMP 1405', section: 'A', credits: 0.5, meeting_infos: { days: 'Mon', time: '10:00 - 11:00', room: '1' } };
+    const course = { crn: '12345', course_name: 'Intro', course_code: 'COMP 1405', section: 'A', credits: 0.5, section_type: 'Online Scheduled Section', meeting_infos: { days: 'Mon', time: '10:00 - 11:00', room: '1' } };
     const log = vi.fn();
     expect(await publishCourses([course], api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 0 });
-    expect(await publishCourses([{ ...course, instructor: 'Grace', meeting_infos: { ...course.meeting_infos, room: '2' } }], api, log)).toEqual({ successfulUpdates: 1, successfulAdditions: 0, failedOperations: 0 });
+    expect(await publishCourses([{ ...course, instructor: 'Grace', section_type: 'Online Unscheduled Section', meeting_infos: { ...course.meeting_infos, room: '2' } }], api, log)).toEqual({ successfulUpdates: 1, successfulAdditions: 0, failedOperations: 0 });
     const result = await api.getCourses();
-    expect(result.courses).toEqual([expect.objectContaining({ crn: '12345', instructor: 'Grace', also_register_in: '', meetings: [expect.objectContaining({ days: 'Mon', room: '2' })] })]);
+    expect(result.courses).toEqual([expect.objectContaining({ crn: '12345', instructor: 'Grace', section_type: 'Online Unscheduled Section', also_register_in: '', meetings: [expect.objectContaining({ days: 'Mon', room: '2' })] })]);
     const stored = await db.query('SELECT term, year FROM courses');
     expect(stored.rows).toEqual([{ term, year }]);
     await db.end();
