@@ -105,6 +105,15 @@ not a fixed wall-clock schedule. Missing credentials or invalid interval setting
 cause startup to fail. `SIGTERM` and `SIGINT` stop the loop and close Chrome.
 Scale to `worker=0` to disable refreshing. Existing API access behavior is preserved.
 
+Browser actions reacquire elements while waiting, retrying stale or temporarily
+unavailable controls for up to ten seconds. Before each subject, the scraper
+waits for the search form or returns to it; if that fails, it reopens the catalog
+in the current session. A failed subject is logged as `Skipping subject ...`, and
+the scraper continues to the next subject. Its final subject summary lists any
+failures. Successful subjects are retained and published even when another
+subject fails; malformed individual courses are also skipped during publishing.
+Initial login or catalog-selection errors still fail the run.
+
 ## RavenData scraper
 
 The TypeScript port retains the Python scraper's selectors, waits, subject order,

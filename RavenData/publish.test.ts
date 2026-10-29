@@ -59,4 +59,15 @@ describe('scraped course publishing', () => {
       ['Successfully updated 1 courses.'], ['Successfully added 1 new courses.'], ['2 operations failed.'], ['Done'],
     ]);
   });
+
+  it('skips a malformed course while still publishing subsequent courses', async () => {
+    const request = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response('{"exists":false}'))
+      .mockResolvedValueOnce(new Response('{"message":"added"}'));
+    const api = new RavenApiClient('https://example.test/api', request, vi.fn());
+    const log = vi.fn();
+    expect(await publishCourses([{}, { crn: '12345', course_name: 'Intro' }], api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 1 });
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Missing course_name'));
+  });
 });
