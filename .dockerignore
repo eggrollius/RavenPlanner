@@ -1,10 +1,15 @@
 .env
+.env.local
+.env.*.local
 .git
 .github
 coverage
 dist
 instance
 node_modules
+.local
+playwright-report
+test-results
 npm-debug.log*
 **/__pycache__
 *.py[cod]

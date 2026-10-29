@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"tsx watch server/index.ts\" \"vite --host 0.0.0.0\"",
+    "dev": "tsx scripts/dev.ts",
+    "dev:external": "concurrently --kill-others \"tsx watch server/index.ts\" \"vite --host 0.0.0.0\"",
+    "db:seed": "tsx scripts/dev.ts --seed",
+    "db:reset": "tsx scripts/dev.ts --reset",
     "build": "tsc -p tsconfig.server.json && tsc -p tsconfig.worker.json && vite build",
     "start": "node dist/server/index.js",
     "migrate": "node dist/server/migrate.js",
@@ -12,10 +15,11 @@
     "worker": "node dist/RavenData/worker.js",
     "scrape:dev": "tsx RavenData/scrape.ts",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "test:containers": "./scripts/test-containers.sh",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.worker.json --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.dev.json",
     "validate": "npm run lint && npm run typecheck && npm test && npm run build",
     "heroku-postbuild": "npm run build"
   },
@@ -28,7 +32,10 @@
     "selenium-webdriver": "^4.51.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
+    "@electric-sql/pglite-socket": "^0.2.16",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

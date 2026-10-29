@@ -2,6 +2,75 @@
 
 Raven Planner builds conflict-free Carleton University timetables. The application is a React + TypeScript client, a small Express API, PostgreSQL, and a TypeScript catalog scraper in `RavenData/`.
 
+## Local development
+
+Install **Node.js 22** (the version in `.nvmrc`), then run these commands from the repository root:
+
+```bash
+npm install
+npm run dev
+```
+
+Open <http://localhost:5173>. That is the full React UI and Express API, backed by
+a persistent local PostgreSQL database. No Docker, PostgreSQL installation,
+`.env` file, accounts, scraper credentials, or production database access is
+needed. `npm ci` also works for a clean install from the lockfile. The first
+install needs Internet access; normal development uses the installed packages.
+
+`dev` starts PGlite (PostgreSQL compiled to WebAssembly) on a free loopback port,
+creates the same schema as production, and loads a synthetic catalog before
+starting the API and Vite with hot reload. The API uses its normal `pg` driver and
+SQL queries. PGlite's single PostgreSQL session serializes queries through its
+socket adapter; use a full PostgreSQL server when testing database concurrency or
+deployment behavior. The local database is only reachable from this computer.
+
+Try adding **COMP 1405**, **MATH 1007**, and **PSYC 1001** together. Each of the
+three demo catalogs (fall, summer, and winter in the selected year) has 34 sections
+across these ten courses:
+
+| Course | Sample data |
+| --- | --- |
+| COMP 1405, COMP 1406 | Two lectures, each with two tutorials |
+| MATH 1007, MATH 1104 | Two lectures, each with two tutorials |
+| PHYS 1001 | A lecture with two lab choices |
+| PSYC 1001, ECON 1001 | Two lecture choices |
+| BUSI 1001, STAT 2507 | Evening and late-afternoon lectures |
+| CGSC 1001 | Online Unscheduled course with no fixed meeting time |
+
+The names, instructors, CRNs, dates, and times are development examples, not a
+live Carleton catalog. They include overlapping times and early/evening sections
+so you can test section selection, schedule pagination, and time preferences.
+Search uses an exact department and course number; other course codes return the
+normal “No course found” error.
+
+Data lives in the ignored `.local/postgres` directory and survives restarts.
+Existing courses are preserved; an empty active term is automatically seeded.
+Press **Ctrl+C** to stop the UI, API, and database together. Stop `dev` before
+running either database maintenance command:
+
+```bash
+npm run db:seed   # Create the local database/catalog if missing; preserve edits
+npm run db:reset  # Replace all local catalog data with the synthetic catalog
+```
+
+Both commands operate only on this repository's embedded database, even if
+`DATABASE_URL` points elsewhere. A process lock prevents another development
+server or maintenance command from opening the same files concurrently. A stale
+lock left by a terminated process is recovered on the next start.
+
+Optional settings come from your shell or Vite's `.env` / `.env.local` files;
+shell values take precedence. `PORT` defaults to `5000` for the API and
+`VITE_PORT` to `5173` for the UI; the proxy follows the API port automatically.
+An occupied port causes startup to fail with a clear error. `ACTIVE_TERM` and
+`ACTIVE_YEAR` select the initial catalog and seed all three seasons for that year;
+they default to `FALL`, `2026`.
+You do not need to copy `.env.example` for the default workflow.
+
+To develop against your own PostgreSQL server, export `DATABASE_URL` and any
+catalog/port settings, then run `npm run dev:external`. That command starts the
+UI and API, creates the schema, and leaves your existing catalog data in place.
+Production uses `npm run build` and `npm start`.
+
 ## Run with Docker
 
 ```bash
@@ -12,17 +81,6 @@ docker compose up --build
 Open <http://localhost:5000>. Compose runs exactly two services: `server` and `db`. PostgreSQL data is stored in the `raven-data` volume. The server automatically creates and migrates its tables and indexes at startup, including upgrading existing databases for multiple terms.
 
 Users can choose fall, summer, and winter catalogs by term and year in the planner. Each catalog has its own course selections while the page is open. Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the default catalog; they default to `FALL` and `2026`. The scraper automatically refreshes every supported term offered by Carleton Central and makes imported catalogs available in the selector. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
-
-## Local development
-
-Start PostgreSQL (or set `DATABASE_URL`), then:
-
-```bash
-npm ci
-npm run dev
-```
-
-Vite serves the client and proxies `/api` to the API on port 5000. Production uses `npm run build` and `npm start`.
 
 ## Unscheduled sections
 
@@ -56,7 +114,23 @@ in-person assessments; the list directs students to their course outlines.
 npm run validate
 ```
 
-`validate` is the single local and CI entry point for linting, type checking, unit and integration tests, and the production build. Use `npm test` for one test run or `npm run test:watch` while developing. The API tests run against an in-memory PostgreSQL-compatible database and exercise the scraper lifecycle. Scraper tests compare against fixtures generated by the original Python parser, check API requests and response handling, publish through the Express API, and verify worker retries and shutdown. Scheduler tests cover conflicts and valid schedule generation, and UI integration tests cover the primary course-planning flow.
+`validate` is the local and CI entry point for linting, type checking, unit and integration tests, and the production build. Use `npm test` for one test run or `npm run test:watch` while developing. The API tests run against an in-memory PostgreSQL-compatible database and exercise the scraper lifecycle. Local catalog tests also run the actual PGlite PostgreSQL engine through `pg`, exercising seed/reset behavior, active-term changes, concurrent API calls, and scheduling from the seeded data. Scraper tests compare against fixtures generated by the original Python parser, check API requests and response handling, publish through the Express API, and verify worker retries and shutdown. Scheduler tests cover conflicts and valid schedule generation, and UI integration tests cover the primary course-planning flow.
+
+To exercise the complete product in a browser before pushing:
+
+```bash
+npx playwright install chromium  # Once per computer
+npm run test:e2e
+```
+
+On Linux machines missing browser system libraries, use
+`npx playwright install --with-deps chromium`. Agents with an installed Chromium
+can instead set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its absolute executable
+path. Browser tests start their own full development stack on ports 5001/5174,
+seed a temporary in-memory database, and stop everything on completion. They
+exercise course search, lecture/tutorial selection, timetable rendering,
+pagination, removal, term switching, unscheduled classes, and API error handling without mocked requests or changes
+to your saved local database. CI runs these tests on Linux, macOS, and Windows.
 
 To build both production containers and smoke-test the API and rendered client with a real PostgreSQL instance, run:
 
