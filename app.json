@@ -4,6 +4,9 @@
   "stack": "heroku-24",
   "buildpacks": [
     {
+      "url": "heroku-community/chrome-for-testing"
+    },
+    {
       "url": "heroku/nodejs"
     }
   ],
@@ -19,6 +22,22 @@
     },
     "ACTIVE_YEAR": {
       "value": "2025"
+    },
+    "CARLETON_CENTRAL_USERNAME": {
+      "description": "Carleton Central username for the RavenData worker.",
+      "required": false
+    },
+    "CARLETON_CENTRAL_PASSWORD": {
+      "description": "Carleton Central password for the RavenData worker.",
+      "required": false
+    },
+    "RAVEN_API_URL": {
+      "description": "Public API endpoint receiving scraped courses, including /api.",
+      "value": "https://www.ravenplanner.ca/api"
+    },
+    "RAVEN_SCRAPE_INTERVAL_SECONDS": {
+      "description": "Wait between worker runs after each scrape finishes.",
+      "value": "86400"
     }
   }
 }

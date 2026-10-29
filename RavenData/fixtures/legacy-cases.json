@@ -1,0 +1,410 @@
+[
+  {
+    "name": "recorded example",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<!--\n    tds = \n    [null, [meeting date, days, time, building, room]]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td>&nbsp;</td>\n    <td colspan=\"11\"> <b>Meeting Date:</b> Sep 06, 2023 to Dec 08, 2023 <b>Days:</b> Wed <b>Time:</b> 11:35 - 14:25\n        <b>Building:</b> Loeb Building <b>Room:</b> D199B</td>\n</tr>\n<!--\n    tds = \n    [null, [section info, section type (online/offiline)]]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td>&nbsp;</td>\n    <td colspan=\"11\"><b>Section Information:</b>&nbsp;<a href=\"https://bit.ly/33tpugu\" target=\"_blank\"> Section Type\n            -</a> IN-PERSON. NOT SUITABLE FOR ONLINE STUDENTS</td>\n</tr>\n<!--\n    tds = \n    [null]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td colspan=\"12\">&nbsp;</td>\n</tr>\n\n{'registration_status': 'Registration Closed', 'crn': '35871', 'course_code': 'ACCS 5001', 'section': 'F',\n'course_name': 'Critical Disability Studies', 'credits': 0.5, 'type': 'Seminar', 'instructor': ''}",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+          "days": "Wed",
+          "time": "11:35 - 14:25",
+          "building": "Loeb Building",
+          "room": "D199B"
+        }
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "Sep 06, 2023 to Dec 08, 2023",
+          "days": "Wed",
+          "time": "11:35 - 14:25",
+          "building": "Loeb Building",
+          "room": "D199B"
+        },
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "last meeting replaces earlier meeting",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><b>Meeting Date:</b> May 05, 2025 to Jun 16, 2025 <b>Days:</b> Mon Wed <b>Time:</b> 10:00 - 11:00 <b>Building:</b> HP <b>Room:</b> 1</td></tr><tr><td></td><td><b>Meeting Date:</b> May 05, 2025 to Jun 16, 2025 <b>Days:</b> Fri <b>Time:</b> 10:00 - 11:00 <b>Building:</b> HP <b>Room:</b> 2</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "May 05, 2025 to Jun 16, 2025",
+          "days": "Fri",
+          "time": "10:00 - 11:00",
+          "building": "HP",
+          "room": "2"
+        }
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "May 05, 2025 to Jun 16, 2025",
+          "days": "Fri",
+          "time": "10:00 - 11:00",
+          "building": "HP",
+          "room": "2"
+        },
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "also register sections and ignored section info",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><a>Also Register in:</a> COMP 1405 A1 or A2 A3</td></tr><tr><td></td><td><b>Section Information:</b> Online</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "COMP 1405 A1,COMP 1405 A2,COMP 1405 A3"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "COMP 1405 A1,COMP 1405 A2,COMP 1405 A3",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "literal spaces in registration list",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><a><b>Also Register in:</b></a> COMP 1405 A1  or A2</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "COMP 1405 A1,COMP 1405 ,COMP 1405 A2"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "COMP 1405 A1,COMP 1405 ,COMP 1405 A2",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "registration label requires an anchor",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><b>Also Register in:</b> COMP 1405 A1 or A2</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "nested anchor without a single string",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><a><b>Also Register in:<!--comment--></b></a> COMP 1405 A1 or A2</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "text nodes entities and ignored comments",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical <b>Disability</b> &amp; Studies&nbsp;🙂</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\"> Kelly <span>Fritsch</span><!--ignore--> </td>\n</tr>\n<tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "CriticalDisability& Studies 🙂",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "KellyFritsch"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "CriticalDisability& Studies 🙂",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "KellyFritsch",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "unknown row and no meeting",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td>Unrecognized row</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": [
+      "Cannot Classify Row"
+    ]
+  },
+  {
+    "name": "missing separator does not emit course",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><b>Meeting Date:</b> May 05, 2025 to Jun 16, 2025 <b>Days:</b> Mon Wed <b>Time:</b> 10:00 - 11:00 <b>Building:</b> HP <b>Room:</b> 1</td></tr>",
+    "courses": [],
+    "payloads": [],
+    "logs": []
+  },
+  {
+    "name": "empty page",
+    "html": "",
+    "courses": [],
+    "payloads": [],
+    "logs": []
+  },
+  {
+    "name": "separator rows emit empty records",
+    "html": "<tr><td colspan=\"12\">&nbsp;</td></tr><tr></tr>",
+    "courses": [
+      {},
+      {}
+    ],
+    "payloads": [
+      {
+        "registration_status": "",
+        "crn": "",
+        "course_code": "",
+        "section": "",
+        "course_name": "",
+        "credits": "",
+        "type": "",
+        "instructor": "",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      },
+      {
+        "registration_status": "",
+        "crn": "",
+        "course_code": "",
+        "section": "",
+        "course_name": "",
+        "credits": "",
+        "type": "",
+        "instructor": "",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  },
+  {
+    "name": "multiple courses in encounter order",
+    "html": "<!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">35871</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35871\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td></td><td><b>Meeting Date:</b> May 05, 2025 to Jun 16, 2025 <b>Days:</b> Mon Wed <b>Time:</b> 10:00 - 11:00 <b>Building:</b> HP <b>Room:</b> 1</td></tr><tr><td colspan=\"12\">&nbsp;</td></tr><!--\n    tds = \n    [null, status, crn, course code, section course name, credit, type, prereqs, restrictions, null, instructor]\n-->\n<tr bgcolor=\"#C0C0C0\">\n    <td align=\"center\" width=\"5%\">\n        &nbsp;\n    </td>\n    <td align=\"left\" width=\"9%\">\n        <font color=\"red\">Registration Closed</font>\n    </td>\n    <td align=\"left\" width=\"5%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35872\"\n            target=\"_blank\">\n            <font color=\"blue\">35872</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"8%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35872\"\n            target=\"_blank\">\n            <font color=\"blue\">ACCS 5001</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"6%\">F1</td>\n    <td align=\"left\" width=\"13%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35872\"\n            target=\"_blank\">\n            <font color=\"blue\">Critical Disability Studies</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"5%\">.5</td>\n    <td align=\"left\" width=\"9%\">Seminar</td>\n    <td align=\"left\" width=\"6%\">No</td>\n    <td align=\"left\" width=\"9%\" style=\"word-wrap: break-word\">\n        <a href=\"bwysched.p_display_course_s?wsea_code=INT&amp;term_code=202330&amp;disp=19912668&amp;crn=35872\"\n            target=\"_blank\">\n            <font color=\"blue\">Yes</font>\n        </a>\n    </td>\n    <td align=\"left\" width=\"7%\">&nbsp;</td>\n    <td align=\"left\" width=\"9%\">Kelly Fritsch</td>\n</tr>\n<tr><td colspan=\"12\">&nbsp;</td></tr>",
+    "courses": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "May 05, 2025 to Jun 16, 2025",
+          "days": "Mon Wed",
+          "time": "10:00 - 11:00",
+          "building": "HP",
+          "room": "1"
+        }
+      },
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35872",
+        "course_code": "ACCS 5001",
+        "section": "F1",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch"
+      }
+    ],
+    "payloads": [
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35871",
+        "course_code": "ACCS 5001",
+        "section": "F",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "meeting_infos": {
+          "meeting_date": "May 05, 2025 to Jun 16, 2025",
+          "days": "Mon Wed",
+          "time": "10:00 - 11:00",
+          "building": "HP",
+          "room": "1"
+        },
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      },
+      {
+        "registration_status": "Registration Closed",
+        "crn": "35872",
+        "course_code": "ACCS 5001",
+        "section": "F1",
+        "course_name": "Critical Disability Studies",
+        "credits": 0.5,
+        "type": "Seminar",
+        "instructor": "Kelly Fritsch",
+        "also_register_in": "",
+        "term": "SUMMER",
+        "year": 2025
+      }
+    ],
+    "logs": []
+  }
+]

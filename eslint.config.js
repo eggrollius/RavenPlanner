@@ -7,7 +7,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}', 'server/**/*.ts', 'vite.config.ts'],
+    files: ['src/**/*.{ts,tsx}', 'server/**/*.ts', 'RavenData/**/*.ts', 'vite.config.ts'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
@@ -15,7 +15,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.ts', 'vite.config.ts'],
+    files: ['server/**/*.ts', 'RavenData/**/*.ts', 'vite.config.ts'],
     languageOptions: {
       globals: { console: 'readonly', process: 'readonly' },
     },
