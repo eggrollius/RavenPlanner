@@ -3,11 +3,11 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules'] },
+  { ignores: ['dist', 'coverage', 'node_modules', '.local', 'playwright-report', 'test-results'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}', 'server/**/*.ts', 'RavenData/**/*.ts', 'vite.config.ts'],
+    files: ['src/**/*.{ts,tsx}', 'server/**/*.ts', 'RavenData/**/*.ts', 'scripts/**/*.ts', 'e2e/**/*.ts', 'playwright.config.ts', 'vite.config.ts'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
@@ -21,7 +21,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.ts', 'RavenData/**/*.ts', 'vite.config.ts'],
+    files: ['server/**/*.ts', 'RavenData/**/*.ts', 'scripts/**/*.ts', 'e2e/**/*.ts', 'playwright.config.ts', 'vite.config.ts'],
     languageOptions: {
       globals: { console: 'readonly', process: 'readonly' },
     },

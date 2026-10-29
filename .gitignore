@@ -1,7 +1,12 @@
 .env
+.env.local
+.env.*.local
 /venv
 app/__pycache__/
 /node_modules
 /dist
 /coverage
+/.local
+/playwright-report
+/test-results
 .DS_Store
