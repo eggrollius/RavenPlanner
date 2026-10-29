@@ -16,7 +16,7 @@ describe('Python parser compatibility', () => {
     const log = vi.fn();
     const parsed = parseCourses(html, log);
     expect(parsed).toEqual(courses);
-    expect(parsed.map(coursePayload)).toEqual(payloads);
+    expect(parsed.map((course) => coursePayload(course, { term: 'SUMMER', year: 2025 }))).toEqual(payloads);
     expect(log.mock.calls.map(([message]) => message)).toEqual(logs);
   });
 

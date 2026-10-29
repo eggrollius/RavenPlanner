@@ -1,7 +1,8 @@
 import { RavenApiClient } from './api_client.js';
+import { readCatalog, type Catalog } from '../server/catalog.js';
 import { coursePayload, type ScrapedCourse } from './parser.js';
 
-export async function publishCourses(courses: ScrapedCourse[], api = new RavenApiClient(), log: (message: string) => void = console.log) {
+export async function publishCourses(courses: ScrapedCourse[], api = new RavenApiClient(), log: (message: string) => void = console.log, catalog: Catalog = readCatalog()) {
   let successfulUpdates = 0;
   let successfulAdditions = 0;
   let failedOperations = 0;
@@ -9,7 +10,7 @@ export async function publishCourses(courses: ScrapedCourse[], api = new RavenAp
   for (const course of courses) {
     if (course.course_name === undefined) throw new Error('Missing course_name');
     log(`Creating course: '${course.course_name}`);
-    const payload = coursePayload(course);
+    const payload = coursePayload(course, catalog);
     try {
       const response = await api.checkCourseExistsByCrn(payload.crn);
       if (!Object.hasOwn(response, 'exists')) throw new Error('Missing exists in course existence response');

@@ -11,7 +11,7 @@ docker compose up --build
 
 Open <http://localhost:5000>. Compose runs exactly two services: `server` and `db`. PostgreSQL data is stored in the `raven-data` volume. The server creates its tables and indexes at startup.
 
-Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the catalog exposed to the planner. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
+Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the catalog for the scraper, API, and planner. They default to `FALL` and `2026`. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
 
 ## Local development
 
@@ -83,6 +83,13 @@ course search returns results.
    config vars. Set `RAVEN_API_URL` to the deployed app's public `/api` URL if it
    differs from the default `https://www.ravenplanner.ca/api`. A worker dyno must
    use the public URL to reach the web dyno; it cannot use `localhost`.
+   Set `ACTIVE_TERM=FALL` and `ACTIVE_YEAR=2026` for Fall 2026. Existing apps keep
+   their previous config vars when `app.json` changes; after deploying, update them:
+
+   ```bash
+   heroku config:set ACTIVE_TERM=FALL ACTIVE_YEAR=2026 --app raven-planner
+   ```
+
 3. Once the web dyno is healthy, enable **one** worker dyno in Resources, or run:
 
    ```bash
@@ -102,10 +109,13 @@ Scale to `worker=0` to disable refreshing. Existing API access behavior is prese
 
 The TypeScript port retains the Python scraper's selectors, waits, subject order,
 course and meeting fields, registration-section parsing, missing-field defaults,
-and check-by-CRN followed by create-or-update flow. It still selects
-**Summer 2025 (May-August)** and sends `term: "SUMMER"` and `year: 2025`.
-`ACTIVE_TERM` and `ACTIVE_YEAR` select the API catalog; they do not change the
-scraper's term. Keep the API set to `SUMMER` / `2025` when running this scraper.
+and check-by-CRN followed by create-or-update flow. Set `ACTIVE_TERM` (`WINTER`,
+`SUMMER`, or `FALL`) and `ACTIVE_YEAR` to select the term; the default is
+**Fall 2026**. The scraper selects the Carleton option by its term code
+(`202630` for Fall 2026), so changes to the displayed month range do not break
+selection. These same settings supply each course's `term` and `year`, the API's
+catalog filter, and the planner's displayed term. Invalid settings fail before
+Chrome starts, and unavailable terms report the portal's available options.
 Each course retains only its last meeting row, as before. The API client also
 preserves the original HTTP-error and invalid-JSON handling for each helper.
 Its ID-update helper still calls the legacy endpoint; the current Express API

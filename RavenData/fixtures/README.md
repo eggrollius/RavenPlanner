@@ -9,4 +9,6 @@ The recorded `example.html` and constructed cases cover text-node whitespace,
 HTML entities, subject order, last-meeting replacement, linked registration
 sections (including literal spaces and nested anchors), ignored section info,
 unknown rows, separators, and unterminated records. Keep these expectations fixed
-when changing the TypeScript parser. Python is not required to run the tests.
+when changing the TypeScript parser. The parity test explicitly supplies the
+legacy `SUMMER` / `2025` configuration to preserve these original expectations;
+the current default catalog is Fall 2026. Python is not required to run the tests.

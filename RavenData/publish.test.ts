@@ -11,19 +11,25 @@ let server: Server | undefined;
 afterEach(async () => {
   if (server) await new Promise<void>((resolve, reject) => server!.close((error) => error ? reject(error) : resolve()));
   server = undefined;
+  vi.unstubAllEnvs();
 });
 
 describe('scraped course publishing', () => {
-  it('adds then updates through the real Express API without changing payloads or meetings', async () => {
+  it.each([
+    { term: 'SUMMER', year: 2025 }, { term: 'FALL', year: 2026 }, { term: 'WINTER', year: 2027 },
+  ])('adds then updates $term $year courses through the real API using the shared configuration', async ({ term, year }) => {
+    vi.stubEnv('ACTIVE_TERM', term);
+    vi.stubEnv('ACTIVE_YEAR', String(year));
     const memory = newDb();
     const { Pool } = memory.adapters.createPg();
     const db = new Pool();
     await ensureSchema(db);
-    server = createApp(db, 'SUMMER', 2025).listen(0, '127.0.0.1');
+    server = createApp(db).listen(0, '127.0.0.1');
     await once(server, 'listening');
     const address = server.address();
     if (!address || typeof address === 'string') throw new Error('Missing test server port');
     const api = new RavenApiClient(`http://127.0.0.1:${address.port}/api`, fetch, vi.fn());
+    expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toEqual({ term, year });
     const course = { crn: '12345', course_name: 'Intro', course_code: 'COMP 1405', section: 'A', credits: 0.5, meeting_infos: { days: 'Mon', time: '10:00 - 11:00', room: '1' } };
     const log = vi.fn();
     expect(await publishCourses([course], api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 0 });
@@ -31,7 +37,7 @@ describe('scraped course publishing', () => {
     const result = await api.getCourses();
     expect(result.courses).toEqual([expect.objectContaining({ crn: '12345', instructor: 'Grace', also_register_in: '', meetings: [expect.objectContaining({ days: 'Mon', room: '2' })] })]);
     const stored = await db.query('SELECT term, year FROM courses');
-    expect(stored.rows).toEqual([{ term: 'SUMMER', year: 2025 }]);
+    expect(stored.rows).toEqual([{ term, year }]);
     await db.end();
   });
 

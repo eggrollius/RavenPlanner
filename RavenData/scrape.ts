@@ -6,6 +6,7 @@ import chrome from 'selenium-webdriver/chrome.js';
 import { Select } from 'selenium-webdriver/lib/select.js';
 import { parseCourses, parseSubjects, type ScrapedCourse } from './parser.js';
 import { publishCourses } from './publish.js';
+import { readCatalog } from '../server/catalog.js';
 
 const waitMs = 10_000;
 const timetable = '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]';
@@ -39,7 +40,19 @@ export async function createDriver(): Promise<WebDriver> {
   return builder.build();
 }
 
-export async function scrapeCourses(driver: WebDriver, credentials: { username: string; password: string }): Promise<ScrapedCourse[]> {
+export async function selectCatalogTerm(dropdown: Pick<Select, 'getOptions' | 'selectByValue'>, catalog = readCatalog()) {
+  const options = await Promise.all((await dropdown.getOptions()).map(async (option) => ({
+    value: await option.getAttribute('value'),
+    label: await option.getText(),
+  })));
+  if (!options.some((option) => option.value === catalog.termCode)) {
+    const available = options.filter((option) => option.value).map((option) => `${option.label} (${option.value})`).join(', ');
+    throw new Error(`Carleton Central does not offer ${catalog.term} ${catalog.year} (${catalog.termCode}). Available terms: ${available || 'none'}. Set ACTIVE_TERM and ACTIVE_YEAR to an offered term.`);
+  }
+  await dropdown.selectByValue(catalog.termCode);
+}
+
+export async function scrapeCourses(driver: WebDriver, credentials: { username: string; password: string }, catalog = readCatalog()): Promise<ScrapedCourse[]> {
   const located = (locator: Locator) => driver.wait(until.elementLocated(locator), waitMs);
   const clickable = async (locator: Locator) => {
     const element = await located(locator);
@@ -52,7 +65,7 @@ export async function scrapeCourses(driver: WebDriver, credentials: { username: 
   await (await located(By.id('passwordInput'))).sendKeys(credentials.password);
   await (await clickable(By.id('submitButton'))).click();
   await (await clickable(By.xpath(timetable))).click();
-  await new Select(await located(By.id('term_code'))).selectByVisibleText('Summer 2025 (May-August)');
+  await selectCatalogTerm(new Select(await located(By.id('term_code'))), catalog);
   await driver.sleep(3000);
   await (await clickable(By.xpath('//*[@id="ws_div"]/input[1]'))).click();
   await driver.sleep(3000);
@@ -80,6 +93,7 @@ export async function scrapeCourses(driver: WebDriver, credentials: { username: 
 
 export async function runScrape(signal?: AbortSignal) {
   const credentials = readCredentials();
+  const catalog = readCatalog();
   signal?.throwIfAborted();
   const driver = await createDriver();
   let closing: Promise<void> | undefined;
@@ -88,9 +102,9 @@ export async function runScrape(signal?: AbortSignal) {
   signal?.addEventListener('abort', abort, { once: true });
   try {
     signal?.throwIfAborted();
-    const courses = await scrapeCourses(driver, credentials);
+    const courses = await scrapeCourses(driver, credentials, catalog);
     signal?.throwIfAborted();
-    return await publishCourses(courses);
+    return await publishCourses(courses, undefined, undefined, catalog);
   } finally {
     signal?.removeEventListener('abort', abort);
     await close();

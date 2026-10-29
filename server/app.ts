@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readCatalog } from './catalog.js';
 import type { CourseInput, MeetingInput, Queryable } from './types.js';
 
 const courseColumns = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'instructor', 'also_register_in', 'term', 'year'] as const;
@@ -32,10 +33,12 @@ async function meetingsFor(db: Queryable, ids: number[]) {
   return grouped;
 }
 
-export function createApp(db: Queryable, activeTerm = process.env.ACTIVE_TERM || 'SUMMER', activeYear = Number(process.env.ACTIVE_YEAR || 2025)) {
+export function createApp(db: Queryable, activeTerm = readCatalog().term, activeYear = readCatalog().year) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
+
+  app.get('/api/catalog', (_req, res) => res.json({ term: activeTerm, year: activeYear }));
 
   app.get('/api/health', async (_req, res, next) => {
     try { await db.query('SELECT 1'); res.json({ status: 'ok' }); } catch (error) { next(error); }

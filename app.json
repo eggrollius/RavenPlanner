@@ -18,10 +18,12 @@
       "value": "production"
     },
     "ACTIVE_TERM": {
-      "value": "SUMMER"
+      "description": "Catalog term for the API and scraper: WINTER, SUMMER, or FALL.",
+      "value": "FALL"
     },
     "ACTIVE_YEAR": {
-      "value": "2025"
+      "description": "Catalog year for the API and scraper.",
+      "value": "2026"
     },
     "CARLETON_CENTRAL_USERNAME": {
       "description": "Carleton Central username for the RavenData worker.",

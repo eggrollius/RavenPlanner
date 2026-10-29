@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { readCatalog, type Catalog } from '../server/catalog.js';
 import type { MeetingInput } from '../server/types.js';
 
 export interface ScrapedCourse {
@@ -106,11 +107,11 @@ export function parseCourses(html: string, log: (message: string) => void = cons
   return courses;
 }
 
-export function coursePayload(course: ScrapedCourse) {
+export function coursePayload(course: ScrapedCourse, catalog: Catalog = readCatalog()) {
   return {
     registration_status: '', crn: '', course_code: '', section: '', course_name: '',
     credits: '' as number | string, type: '', instructor: '', also_register_in: '',
-    term: 'SUMMER', year: 2025,
+    term: catalog.term, year: catalog.year,
     ...course,
   };
 }

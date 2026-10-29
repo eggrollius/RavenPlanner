@@ -4,6 +4,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { Header } from './components/Header';
 import type { Course } from './types';
 
 const course: Course = {
@@ -33,12 +34,14 @@ afterEach(() => {
 
 describe('course planning flow', () => {
   it('searches for a course, displays a schedule, and removes the course', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(JSON.stringify(url === '/api/catalog' ? { term: 'FALL', year: 2026 } : {
       status: 'success',
       data: { A: { parent: course, children: [] } },
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
     const user = userEvent.setup();
     render(<App />);
+
+    expect(await screen.findByText('Fall 2026')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Department'), 'comp');
     await user.type(screen.getByLabelText('Course number'), '1405');
@@ -54,9 +57,9 @@ describe('course planning flow', () => {
   });
 
   it('shows API errors to the user', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(
-      JSON.stringify({ message: 'No course found matching the query' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(
+      JSON.stringify(url === '/api/catalog' ? { term: 'FALL', year: 2026 } : { message: 'No course found matching the query' }),
+      { status: url === '/api/catalog' ? 200 : 400, headers: { 'Content-Type': 'application/json' } },
     ));
     const user = userEvent.setup();
     render(<App />);
@@ -66,5 +69,12 @@ describe('course planning flow', () => {
     await user.click(screen.getByRole('button', { name: /Add course/ }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No course found matching the query');
+  });
+
+  it('updates the displayed term from the API configuration', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({ term: 'WINTER', year: 2027 })));
+    render(<Header />);
+    expect(await screen.findByText('Winter 2027')).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith('/api/catalog', { signal: expect.any(AbortSignal) });
   });
 });

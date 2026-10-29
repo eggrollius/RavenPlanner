@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import { readCredentials, runScrape } from './scrape.js';
+import { readCatalog } from '../server/catalog.js';
 
 export function refreshInterval(value = process.env.RAVEN_SCRAPE_INTERVAL_SECONDS ?? '86400') {
   const seconds = Number(value);
@@ -40,6 +41,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   process.once('SIGINT', () => controller.abort());
   try {
     readCredentials();
+    readCatalog();
     await runWorker(controller.signal);
   } catch (failure) {
     console.error(`Error: ${failure instanceof Error ? failure.message : failure}`);
