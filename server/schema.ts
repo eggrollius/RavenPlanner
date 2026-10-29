@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS courses (
   credits DOUBLE PRECISION NOT NULL DEFAULT 0,
   type VARCHAR(50) NOT NULL DEFAULT '',
   instructor VARCHAR(255) NOT NULL DEFAULT '',
-  also_register_in VARCHAR(255) NOT NULL DEFAULT '',
+  also_register_in TEXT NOT NULL DEFAULT '',
   term VARCHAR(10) NOT NULL,
   year INTEGER NOT NULL
 );
@@ -34,6 +34,8 @@ CREATE INDEX IF NOT EXISTS meeting_infos_course_idx ON meeting_infos (course_id)
 -- A course row represents one lecture/tutorial section. Existing rows stay
 -- unknown until the scraper observes Section Information for that section.
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS section_type TEXT;
+-- Large lectures can link more lab/tutorial sections than 255 characters hold.
+ALTER TABLE courses ALTER COLUMN also_register_in TYPE TEXT;
 `;
 
 export async function ensureSchema(db: Queryable): Promise<void> {

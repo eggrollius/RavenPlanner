@@ -252,6 +252,8 @@ and `ACTIVE_YEAR` choose the default and scrape priority; the default is
 are skipped automatically, and existing stored catalogs remain accessible.
 Each course retains only its last meeting row, as before. API existence checks,
 creation, and CRN updates reject HTTP errors so failed writes are counted.
+The database stores linked lab/tutorial registration lists as `TEXT`; startup
+automatically widens existing `VARCHAR(255)` columns without truncating data.
 Its ID-update helper still calls the legacy endpoint; the current Express API
 only implements updates by CRN, which is what the scraper uses.
 
