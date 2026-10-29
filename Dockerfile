@@ -11,7 +11,7 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 ENV NODE_ENV=production PORT=5000
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 USER node

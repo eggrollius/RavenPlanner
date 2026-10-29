@@ -6,7 +6,7 @@ import chrome from 'selenium-webdriver/chrome.js';
 import { Select } from 'selenium-webdriver/lib/select.js';
 import { parseCourses, parseSubjects, type ScrapedCourse } from './parser.js';
 import { publishCourses } from './publish.js';
-import { readCatalog } from '../server/catalog.js';
+import { catalogFromCode, readCatalog } from '../server/catalog.js';
 
 const waitMs = 10_000;
 const timetable = '/html/body/div[3]/table[1]/tbody/tr[3]/td[2]/span/ul/li[1]/a[3]';
@@ -117,28 +117,43 @@ export async function selectCatalogTerm(dropdown: Pick<Select, 'getOptions' | 's
   await dropdown.selectByValue(catalog.termCode);
 }
 
+export async function availableCatalogs(dropdown: Pick<Select, 'getOptions'>) {
+  const codes = await Promise.all((await dropdown.getOptions()).map((option) => option.getAttribute('value')));
+  const catalogs = [...new Set(codes)].flatMap((code) => {
+    const catalog = code ? catalogFromCode(code) : undefined;
+    return catalog ? [catalog] : [];
+  });
+  if (!catalogs.length) throw new Error('Carleton Central offers no supported catalog terms.');
+  const preferred = readCatalog().termCode;
+  return catalogs.sort((a, b) => Number(b.termCode === preferred) - Number(a.termCode === preferred) || b.termCode.localeCompare(a.termCode));
+}
+
+async function openTimetable(driver: WebDriver, credentials: { username: string; password: string }, signal?: AbortSignal) {
+  signal?.throwIfAborted();
+  await driver.get('https://central.carleton.ca/');
+  // Reuse the signed-in session when switching terms or recovering navigation.
+  const needsLogin = await driver.wait(async () => {
+    try {
+      if ((await driver.findElements(By.id('userNameInput'))).length) return { login: true };
+      if ((await driver.findElements(By.xpath(timetable))).length) return { login: false };
+      return false;
+    } catch (failure) {
+      if (transientElementFailure(failure)) return false;
+      throw failure;
+    }
+  }, waitMs);
+  if (needsLogin && needsLogin.login) {
+    await withFreshElement(driver, By.id('userNameInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.username); }, true);
+    await withFreshElement(driver, By.id('passwordInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.password); }, true);
+    await withFreshElement(driver, By.id('submitButton'), (element) => element.click(), true);
+  }
+  await withFreshElement(driver, By.xpath(timetable), (element) => element.click(), true);
+}
+
 export async function scrapeCourses(driver: WebDriver, credentials: { username: string; password: string }, catalog = readCatalog(), signal?: AbortSignal): Promise<ScrapedCourse[]> {
   const click = (locator: Locator) => withFreshElement(driver, locator, (element) => element.click(), true);
   const openSearch = async () => {
-    signal?.throwIfAborted();
-    await driver.get('https://central.carleton.ca/');
-    // Recovery can return to a session that is already signed in.
-    const needsLogin = await driver.wait(async () => {
-      try {
-        if ((await driver.findElements(By.id('userNameInput'))).length) return { login: true };
-        if ((await driver.findElements(By.xpath(timetable))).length) return { login: false };
-        return false;
-      } catch (failure) {
-        if (transientElementFailure(failure)) return false;
-        throw failure;
-      }
-    }, waitMs);
-    if (needsLogin && needsLogin.login) {
-      await withFreshElement(driver, By.id('userNameInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.username); }, true);
-      await withFreshElement(driver, By.id('passwordInput'), async (element) => { await element.clear(); await element.sendKeys(credentials.password); }, true);
-      await click(By.id('submitButton'));
-    }
-    await click(By.xpath(timetable));
+    await openTimetable(driver, credentials, signal);
     await withFreshElement(driver, By.id('term_code'), (element) => selectCatalogTerm(new Select(element), catalog));
     await driver.sleep(3000);
     await click(By.xpath('//*[@id="ws_div"]/input[1]'));
@@ -176,9 +191,29 @@ export async function scrapeCourses(driver: WebDriver, credentials: { username: 
   }, signal);
 }
 
+export async function scrapeCatalogs(catalogs: Awaited<ReturnType<typeof availableCatalogs>>, scrape: (catalog: typeof catalogs[number]) => Promise<unknown>, signal?: AbortSignal) {
+  let completed = 0;
+  let failed = 0;
+  for (const catalog of catalogs) {
+    signal?.throwIfAborted();
+    try {
+      console.log(`Refreshing ${catalog.term} ${catalog.year} (${catalog.termCode}).`);
+      await scrape(catalog);
+      completed += 1;
+    } catch (failure) {
+      signal?.throwIfAborted();
+      failed += 1;
+      console.error(`Skipping catalog ${catalog.term} ${catalog.year}: ${failure instanceof Error ? failure.message : failure}`);
+    }
+  }
+  if (!completed) throw new Error('No catalogs could be refreshed.');
+  console.log(`Catalogs completed: ${completed}; failed: ${failed}.`);
+  return { completed, failed };
+}
+
 export async function runScrape(signal?: AbortSignal) {
   const credentials = readCredentials();
-  const catalog = readCatalog();
+  readCatalog();
   signal?.throwIfAborted();
   const driver = await createDriver();
   let closing: Promise<void> | undefined;
@@ -187,9 +222,13 @@ export async function runScrape(signal?: AbortSignal) {
   signal?.addEventListener('abort', abort, { once: true });
   try {
     signal?.throwIfAborted();
-    const courses = await scrapeCourses(driver, credentials, catalog, signal);
-    signal?.throwIfAborted();
-    return await publishCourses(courses, undefined, undefined, catalog);
+    await openTimetable(driver, credentials, signal);
+    const catalogs = await withFreshElement(driver, By.id('term_code'), (element) => availableCatalogs(new Select(element)));
+    return await scrapeCatalogs(catalogs, async (catalog) => {
+      const courses = await scrapeCourses(driver, credentials, catalog, signal);
+      signal?.throwIfAborted();
+      return publishCourses(courses, undefined, undefined, catalog);
+    }, signal);
   } finally {
     signal?.removeEventListener('abort', abort);
     await close();

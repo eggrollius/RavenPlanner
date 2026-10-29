@@ -9,9 +9,9 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open <http://localhost:5000>. Compose runs exactly two services: `server` and `db`. PostgreSQL data is stored in the `raven-data` volume. The server creates its tables and indexes at startup.
+Open <http://localhost:5000>. Compose runs exactly two services: `server` and `db`. PostgreSQL data is stored in the `raven-data` volume. The server automatically creates and migrates its tables and indexes at startup, including upgrading existing databases for multiple terms.
 
-Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the catalog for the scraper, API, and planner. They default to `FALL` and `2026`. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
+Users can choose fall, summer, and winter catalogs by term and year in the planner. Each catalog has its own course selections while the page is open. Set `ACTIVE_TERM` and `ACTIVE_YEAR` to choose the default catalog; they default to `FALL` and `2026`. The scraper automatically refreshes every supported term offered by Carleton Central and makes imported catalogs available in the selector. Change `POSTGRES_PASSWORD` outside local development. This setup is portable to any host with Docker Compose; the same server image and environment variables can also be deployed to AWS ECS, Azure Container Apps, or another container platform with managed PostgreSQL.
 
 ## Local development
 
@@ -47,8 +47,13 @@ The app uses the Heroku Chrome for Testing and Node.js buildpacks on `heroku-24`
 `npm run worker`. `heroku-postbuild` compiles the server, worker, and client before
 Heroku prunes development dependencies. Both processes run compiled JavaScript;
 Python and `tsx` are not needed at runtime. Node 22 is pinned in `package.json`.
-The server listens on Heroku's assigned `PORT` and creates its database schema at
-startup; the old Flask release process is no longer required.
+The Heroku release process automatically runs `npm run migrate` before new web
+and worker dynos start. Server startup also runs the same idempotent migration for
+Docker and other hosts. Existing course IDs and meeting rows are preserved while
+the old globally unique CRN is replaced with uniqueness on `(term, year, crn)`.
+Migration changes run in one transaction; a failure prevents the new server from
+starting. No manual database command is needed. The server listens on Heroku's
+assigned `PORT`.
 
 The existing Heroku app, `raven-planner`, automatically deploys the GitHub `main`
 branch. Merge the deployment changes into `main` to trigger a deployment; no
@@ -57,7 +62,8 @@ Node 22 compatible stack. `app.json` describes new apps and review apps; it does
 not change the existing app's settings when `main` deploys.
 
 Keep an existing database attachment: it supplies `DATABASE_URL`. Select the
-catalog with `ACTIVE_TERM` and `ACTIVE_YEAR`. `app.json` declares the buildpack,
+default catalog with `ACTIVE_TERM` and `ACTIVE_YEAR`; these settings do not restrict
+users or scraping to one term. `app.json` declares the buildpack,
 configuration defaults, and a paid PostgreSQL add-on for a new Heroku app.
 The server detects Heroku's `DYNO` environment variable and uses the Heroku Postgres
 Node configuration: `ssl: { rejectUnauthorized: false }`. This requires an encrypted
@@ -83,12 +89,8 @@ course search returns results.
    config vars. Set `RAVEN_API_URL` to the deployed app's public `/api` URL if it
    differs from the default `https://www.ravenplanner.ca/api`. A worker dyno must
    use the public URL to reach the web dyno; it cannot use `localhost`.
-   Set `ACTIVE_TERM=FALL` and `ACTIVE_YEAR=2026` for Fall 2026. Existing apps keep
-   their previous config vars when `app.json` changes; after deploying, update them:
-
-   ```bash
-   heroku config:set ACTIVE_TERM=FALL ACTIVE_YEAR=2026 --app raven-planner
-   ```
+   Existing `ACTIVE_TERM` and `ACTIVE_YEAR` settings continue to select the default
+   catalog. No config-var change is needed to enable multiple terms.
 
 3. Once the web dyno is healthy, enable **one** worker dyno in Resources, or run:
 
@@ -97,7 +99,10 @@ course search returns results.
    heroku logs --tail --dyno worker --app raven-planner
    ```
 
-The worker scrapes immediately when it starts, then waits 86,400 seconds (24 hours)
+The worker discovers and scrapes all available winter, summer, and fall terms
+when it starts, prioritizing the configured default when offered. Terms can span
+years, such as Fall 2026 and Winter 2027. A failed term is logged and skipped so
+other terms can still refresh. The worker then waits 86,400 seconds (24 hours)
 after each completed or failed run. Set the optional `RAVEN_SCRAPE_INTERVAL_SECONDS`
 config var to change that wait. Runs are sequential and Chrome is closed after
 each run. Dyno restarts also trigger a run; this is an elapsed-time refresh loop,
@@ -112,19 +117,21 @@ in the current session. A failed subject is logged as `Skipping subject ...`, an
 the scraper continues to the next subject. Its final subject summary lists any
 failures. Successful subjects are retained and published even when another
 subject fails; malformed individual courses are also skipped during publishing.
-Initial login or catalog-selection errors still fail the run.
+Initial login or term-discovery errors still fail the run; failures within one
+catalog do not prevent other catalogs from refreshing.
 
 ## RavenData scraper
 
 The TypeScript port retains the Python scraper's selectors, waits, subject order,
 course and meeting fields, registration-section parsing, missing-field defaults,
-and check-by-CRN followed by create-or-update flow. Set `ACTIVE_TERM` (`WINTER`,
-`SUMMER`, or `FALL`) and `ACTIVE_YEAR` to select the term; the default is
-**Fall 2026**. The scraper selects the Carleton option by its term code
-(`202630` for Fall 2026), so changes to the displayed month range do not break
-selection. These same settings supply each course's `term` and `year`, the API's
-catalog filter, and the planner's displayed term. Invalid settings fail before
-Chrome starts, and unavailable terms report the portal's available options.
+and check-by-CRN followed by create-or-update flow. The existence check and
+update both include the scraped term and year, so a CRN reused in another catalog
+is a separate course. The scraper reads the portal's term options and selects
+each supported term by code (`202630` for Fall 2026), so displayed labels and
+month ranges do not affect selection. `ACTIVE_TERM` (`WINTER`, `SUMMER`, or `FALL`)
+and `ACTIVE_YEAR` choose the default and scrape priority; the default is
+**Fall 2026**. Invalid settings fail before Chrome starts. Unavailable terms
+are skipped automatically, and existing stored catalogs remain accessible.
 Each course retains only its last meeting row, as before. The API client also
 preserves the original HTTP-error and invalid-JSON handling for each helper.
 Its ID-update helper still calls the legacy endpoint; the current Express API
@@ -145,3 +152,15 @@ not already available. The normal web-only Docker image does not install Chrome;
 the Heroku worker uses the Chrome for Testing buildpack. No Python dependencies
 are required. `.env.example` documents the variables; export them in your shell
 or supply them through your process manager (the scraper does not load `.env`).
+
+## Catalog API
+
+`GET /api/catalog` returns the default `term` and `year` plus a `catalogs` array
+containing the default and all stored term/year pairs. Other course endpoints
+accept `?term=WINTER&year=2027`; requests without a selector use the configured
+default for compatibility. Supply both fields when selecting a catalog.
+Creation and CRN updates also accept `term` and `year` in their JSON body. Query
+and body selectors must agree when both are supplied. Invalid selectors return
+HTTP 400. Lists, searches, existence checks, updates, and deletes all operate
+within that catalog. The same CRN can exist in different terms or years, while
+duplicates within one catalog retain the existing duplicate response.

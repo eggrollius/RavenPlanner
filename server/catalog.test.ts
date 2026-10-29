@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { readCatalog } from './catalog.js';
+import { catalogFromCode, parseCatalog, readCatalog } from './catalog.js';
 
 describe('catalog configuration', () => {
+  it('validates request catalogs and portal codes without silently falling back to defaults', () => {
+    expect(parseCatalog(' winter ', '2027')).toEqual({ term: 'WINTER', year: 2027 });
+    expect(catalogFromCode('202620')).toEqual({ term: 'SUMMER', year: 2026, termCode: '202620' });
+    for (const code of ['', '202640', '20261', '000010', '202630extra']) expect(catalogFromCode(code)).toBeUndefined();
+    expect(() => parseCatalog(['FALL'], 2026)).toThrow('term');
+    expect(() => parseCatalog('FALL', undefined)).toThrow('year');
+  });
   it('defaults to Fall 2026', () => {
     expect(readCatalog({})).toEqual({ term: 'FALL', year: 2026, termCode: '202630' });
   });

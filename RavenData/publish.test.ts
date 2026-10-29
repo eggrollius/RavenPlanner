@@ -15,6 +15,32 @@ afterEach(async () => {
 });
 
 describe('scraped course publishing', () => {
+  it('publishes and refreshes the same CRN in several catalogs on one server', async () => {
+    const { Pool } = newDb().adapters.createPg();
+    const db = new Pool();
+    await ensureSchema(db);
+    server = createApp(db, 'FALL', 2026).listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('Missing test server port');
+    const api = new RavenApiClient(`http://127.0.0.1:${address.port}/api`, fetch, vi.fn());
+    const catalogs = [{ term: 'FALL', year: 2026 }, { term: 'SUMMER', year: 2026 }, { term: 'WINTER', year: 2027 }] as const;
+    try {
+      for (const catalog of catalogs) {
+        const course = { crn: '12345', course_name: `${catalog.term} course`, course_code: 'COMP 1405', section: 'A', credits: 0.5 };
+        expect(await publishCourses([course], api, vi.fn(), catalog)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 0 });
+        expect(await publishCourses([{ ...course, instructor: `${catalog.term} instructor` }], api, vi.fn(), catalog)).toEqual({ successfulUpdates: 1, successfulAdditions: 0, failedOperations: 0 });
+      }
+      for (const catalog of catalogs) {
+        const result = await api.getCourses(catalog);
+        expect(result.courses).toEqual([expect.objectContaining({ ...catalog, instructor: `${catalog.term} instructor`, course_name: `${catalog.term} course` })]);
+      }
+      expect((await db.query('SELECT id FROM courses')).rowCount).toBe(3);
+    } finally {
+      await db.end();
+    }
+  });
+
   it.each([
     { term: 'SUMMER', year: 2025 }, { term: 'FALL', year: 2026 }, { term: 'WINTER', year: 2027 },
   ])('adds then updates $term $year courses through the real API using the shared configuration', async ({ term, year }) => {
@@ -29,7 +55,7 @@ describe('scraped course publishing', () => {
     const address = server.address();
     if (!address || typeof address === 'string') throw new Error('Missing test server port');
     const api = new RavenApiClient(`http://127.0.0.1:${address.port}/api`, fetch, vi.fn());
-    expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toEqual({ term, year });
+    expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toEqual({ term, year, catalogs: [{ term, year }] });
     const course = { crn: '12345', course_name: 'Intro', course_code: 'COMP 1405', section: 'A', credits: 0.5, meeting_infos: { days: 'Mon', time: '10:00 - 11:00', room: '1' } };
     const log = vi.fn();
     expect(await publishCourses([course], api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 0 });
