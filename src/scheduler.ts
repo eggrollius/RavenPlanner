@@ -32,7 +32,8 @@ export function generateSchedules(selected: SelectedCourse[], preferences: Prefe
   const choices = selected.map(({ sections, disabled }) => Object.values(sections).flatMap(({ parent, children }) => {
     if (disabled.has(parent.crn)) return [];
     const availableChildren = children.filter((child) => !disabled.has(child.crn));
-    return availableChildren.length ? availableChildren.map((child) => ({ parent, child })) : [{ parent }];
+    // Only lectures without linked tutorials or labs may stand alone.
+    return children.length ? availableChildren.map((child) => ({ parent, child })) : [{ parent }];
   }));
   if (!choices.length || choices.some((choice) => !choice.length)) return [];
   let schedules: ScheduleSection[][] = [[]];
