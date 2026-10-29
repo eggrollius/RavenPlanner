@@ -1,9 +1,9 @@
-import { By, error, type WebDriver, type WebElement } from 'selenium-webdriver';
+import { By, error, WebDriver, type WebElement } from 'selenium-webdriver';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readCatalog } from '../server/catalog.js';
-import { availableCatalogs, scrapeCatalogs, scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
+import { availableCatalogs, browserWaitMs, scrapeCatalogs, scrapeCourses, scrapeSubjects, selectCatalogTerm, withFreshElement } from './scrape.js';
 
-afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 
 function option(value: string, label: string) {
   return { getAttribute: vi.fn().mockResolvedValue(value), getText: vi.fn().mockResolvedValue(label) } as unknown as WebElement;
@@ -75,12 +75,13 @@ describe('Carleton term selection', () => {
   });
 });
 
-// Model Selenium's polling while avoiding real ten-second waits in unit tests.
+// Model Selenium's polling without waiting for the real browser timeout.
 function pollingDriver(findElement: ReturnType<typeof vi.fn>) {
   return {
     findElement,
-    wait: vi.fn(async (condition: () => Promise<unknown>, timeout: number) => {
-      expect(timeout).toBe(10_000);
+    getCurrentUrl: vi.fn().mockResolvedValue('https://central.carleton.ca/'),
+    getTitle: vi.fn().mockResolvedValue('Carleton Central'),
+    wait: vi.fn(async (condition: () => Promise<unknown>) => {
       for (let poll = 0; poll < 4; poll += 1) {
         const result = await condition();
         if (result) return result;
@@ -89,6 +90,92 @@ function pollingDriver(findElement: ReturnType<typeof vi.fn>) {
     }),
   } as unknown as WebDriver;
 }
+
+describe('browser timeouts', () => {
+  it('allows slower SSO responses by default and validates the configured limit', () => {
+    vi.stubEnv('RAVEN_BROWSER_WAIT_MS', undefined);
+    expect(browserWaitMs()).toBe(30_000);
+    vi.stubEnv('RAVEN_BROWSER_WAIT_MS', '60000');
+    expect(browserWaitMs()).toBe(60_000);
+    expect(browserWaitMs('300000')).toBe(300_000);
+    for (const value of ['', '0', '-1', 'NaN', 'Infinity', '1.5', '300001']) expect(() => browserWaitMs(value)).toThrow('RAVEN_BROWSER_WAIT_MS');
+  });
+
+  it('waits through a fifteen-second page transition that exceeded the old limit', async () => {
+    vi.useFakeTimers();
+    vi.stubEnv('RAVEN_BROWSER_WAIT_MS', undefined);
+    const started = Date.now();
+    const field = { getAttribute: vi.fn().mockResolvedValue('ready') };
+    const driver = pollingDriver(vi.fn(async () => {
+      if (Date.now() - started < 15_000) throw new error.NoSuchElementError('still loading');
+      return field;
+    }));
+    // Exercise Selenium's real polling and timeout behavior without Chrome.
+    driver.wait = WebDriver.prototype.wait;
+    const waiting = withFreshElement(driver, By.id('results'), (element) => element.getAttribute('innerHTML'));
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(field.getAttribute).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(5_000);
+    await expect(waiting).resolves.toBe('ready');
+  });
+
+  it('uses the configured timeout and identifies a blocked step without exposing URL tokens', async () => {
+    vi.stubEnv('RAVEN_BROWSER_WAIT_MS', '60000');
+    const driver = pollingDriver(vi.fn().mockRejectedValue(new error.NoSuchElementError('missing')));
+    vi.mocked(driver.getCurrentUrl).mockResolvedValue('https://user:secret@sso.example/adfs/ls/?SAMLRequest=sensitive#token');
+    vi.mocked(driver.getTitle).mockResolvedValue('Verify your identity');
+    const waiting = withFreshElement(driver, By.id('menu'), (element) => element.click(), true, 'waiting for the signed-in timetable link');
+    await expect(waiting).rejects.toBeInstanceOf(error.TimeoutError);
+    await expect(waiting).rejects.toThrow('Timed out after 60000ms while waiting for the signed-in timetable link. Page: https://sso.example/adfs/ls/; title: "Verify your identity".');
+    expect(driver.wait).toHaveBeenCalledWith(expect.any(Function), 60_000, 'waiting for the signed-in timetable link');
+  });
+
+  it('preserves the timeout when the browser cannot supply diagnostics', async () => {
+    const driver = pollingDriver(vi.fn().mockRejectedValue(new error.StaleElementReferenceError('page changed')));
+    vi.mocked(driver.getCurrentUrl).mockRejectedValue(new error.NoSuchSessionError('browser closed'));
+    vi.mocked(driver.getTitle).mockRejectedValue(new error.NoSuchSessionError('browser closed'));
+    await expect(withFreshElement(driver, By.id('search'), (element) => element.click())).rejects.toMatchObject({
+      name: 'TimeoutError',
+      message: expect.stringContaining('Page: unavailable; title: unavailable.'),
+    });
+  });
+
+  it.each(['about:blank', 'chrome-error://chromewebdata/'])('identifies a browser error or blank page at %s', async (url) => {
+    const driver = pollingDriver(vi.fn().mockRejectedValue(new error.NoSuchElementError('missing')));
+    vi.mocked(driver.getCurrentUrl).mockResolvedValue(url);
+    await expect(withFreshElement(driver, By.id('search'), (element) => element.click())).rejects.toThrow(`Page: ${url};`);
+  });
+
+  it('identifies an unexpected landing page before attempting to enter credentials', async () => {
+    const driver = Object.assign(pollingDriver(vi.fn()), {
+      get: vi.fn().mockResolvedValue(undefined),
+      findElements: vi.fn().mockResolvedValue([]),
+    });
+    await expect(scrapeCourses(driver, { username: 'test-user', password: 'test-password' }, readCatalog({}))).rejects.toThrow('waiting for the Carleton Central login form or signed-in timetable menu');
+    expect(driver.findElement).not.toHaveBeenCalled();
+  });
+
+  it('identifies a sign-in that never reaches the timetable menu', async () => {
+    const field = {
+      isDisplayed: vi.fn().mockResolvedValue(true),
+      isEnabled: vi.fn().mockResolvedValue(true),
+      clear: vi.fn().mockResolvedValue(undefined),
+      sendKeys: vi.fn().mockResolvedValue(undefined),
+      click: vi.fn().mockResolvedValue(undefined),
+    };
+    const find = vi.fn(async (locator: By) => {
+      if (locator.using === 'xpath') throw new error.NoSuchElementError('missing timetable');
+      return field;
+    });
+    const driver = Object.assign(pollingDriver(find), {
+      get: vi.fn().mockResolvedValue(undefined),
+      findElements: vi.fn().mockResolvedValue([field]),
+    });
+    await expect(scrapeCourses(driver, { username: 'test-user', password: 'test-password' }, readCatalog({}))).rejects.toThrow('waiting for the signed-in timetable link');
+    expect(field.click).toHaveBeenCalledTimes(1);
+    expect(field.sendKeys.mock.calls).toEqual([['test-user'], ['test-password']]);
+  });
+});
 
 describe('browser action recovery', () => {
   it('reacquires a button after a stale reference instead of reusing the failed handle', async () => {
@@ -123,6 +210,16 @@ describe('browser action recovery', () => {
     const disconnected = vi.fn().mockRejectedValue(new error.NoSuchSessionError('browser disconnected'));
     await expect(withFreshElement(pollingDriver(disconnected), By.id('search'), (element) => element.click())).rejects.toBeInstanceOf(error.NoSuchSessionError);
     expect(disconnected).toHaveBeenCalledTimes(1);
+  });
+
+  it('records the retry and the completed step without logging browser action arguments', async () => {
+    const field = { sendKeys: vi.fn().mockResolvedValue(undefined) };
+    const find = vi.fn().mockRejectedValueOnce(new error.StaleElementReferenceError('page changed')).mockResolvedValue(field);
+    const log = vi.fn();
+    await withFreshElement(pollingDriver(find), By.id('password'), (element) => element.sendKeys('test-password'), false, 'entering the password', log);
+    expect(log).toHaveBeenCalledWith('browser.element.retry', { step: 'entering the password', reason: 'StaleElementReferenceError' });
+    expect(log).toHaveBeenLastCalledWith('browser.wait.completed', { step: 'entering the password', elapsedMs: expect.any(Number), polls: 2 });
+    expect(JSON.stringify(log.mock.calls)).not.toContain('test-password');
   });
 });
 
