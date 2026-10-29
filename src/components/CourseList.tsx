@@ -1,6 +1,7 @@
-import type { SelectedCourse } from '../types';
+import { isUnscheduled } from '../scheduler';
+import type { Course, SelectedCourse } from '../types';
 
-const detail = (meeting?: { days: string; time: string }) => meeting ? `${meeting.days || 'TBA'} · ${meeting.time || 'TBA'}` : 'Time to be announced';
+const detail = (course: Course) => isUnscheduled(course) ? 'Unscheduled · No fixed class time' : course.meeting_infos.length ? course.meeting_infos.map((meeting) => `${meeting.days || 'TBA'} · ${meeting.time || 'TBA'}`).join(' / ') : 'Time to be announced';
 
 export function CourseList({ courses, onToggle, onRemove }: { courses: SelectedCourse[]; onToggle: (code: string, crn: string) => void; onRemove: (code: string) => void }) {
   if (!courses.length) return <div className="empty-state"><div>＋</div><h3>Your course list is empty</h3><p>Add a course above to start building possible schedules.</p></div>;
@@ -22,11 +23,11 @@ export function CourseList({ courses, onToggle, onRemove }: { courses: SelectedC
         <div className="section-grid">{groups.map(([letter, group]) => <div className="section" key={letter}>
           <label className="section-title">
             <input type="checkbox" checked={!course.disabled.has(group.parent.crn)} onChange={() => onToggle(course.code, group.parent.crn)} />
-            <span><b>Lecture {letter}</b><small>{group.parent.instructor || 'Instructor TBA'} · {detail(group.parent.meeting_infos[0])}</small></span>
+            <span><b>Lecture {letter}</b><small>{group.parent.instructor || 'Instructor TBA'} · {detail(group.parent)}</small></span>
           </label>
           {group.children.length > 0 && <div className="tutorials">{group.children.map((child) => <label key={child.crn}>
             <input type="checkbox" checked={!course.disabled.has(child.crn)} onChange={() => onToggle(course.code, child.crn)} />
-            <span>{child.type || 'Tutorial'} {child.section}</span><small>{detail(child.meeting_infos[0])}</small>
+            <span>{child.type || 'Tutorial'} {child.section}</span><small>{detail(child)}</small>
           </label>)}</div>}
         </div>)}</div>
       </details>

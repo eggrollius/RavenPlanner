@@ -16,6 +16,7 @@ export interface CourseInput {
   course_name?: string;
   credits?: number;
   type?: string;
+  section_type?: string | null;
   instructor?: string;
   also_register_in?: string;
   term?: string;

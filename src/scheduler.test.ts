@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateSchedules, meetingsConflict, timeRange } from './scheduler';
+import { generateSchedules, isUnscheduled, meetingsConflict, timeRange } from './scheduler';
 import type { Course, MeetingInfo, Preferences, SelectedCourse } from './types';
 
 const meeting = (days: string, time: string): MeetingInfo => ({ days, time, meeting_date: 'May 05, 2025 to Jun 16, 2025', building: '', room: '' });
@@ -60,5 +60,49 @@ describe('scheduler', () => {
     const selected = linkedCourse('Tutorial');
     selected.sections.A.children = [];
     expect(generateSchedules([selected], preferences)).toEqual([[{ parent: selected.sections.A.parent }]]);
+  });
+});
+
+const select = (...courses: Course[]): SelectedCourse => ({ code: courses[0].course_code, sections: Object.fromEntries(courses.map((parent) => [parent.section, { parent, children: [] }])), disabled: new Set() });
+
+describe('unscheduled sections', () => {
+  it.each([
+    ['Online Unscheduled Section (Campus presence is not required)', true],
+    [' ONLINE\nUNSCHEDULED SECTION WITH IN-PERSON ASSESSMENTS (campus presence)', true],
+    ['Online Scheduled Section (Campus presence is not required)', false],
+    ['Online Scheduled Section with In-Person Assessments (Campus presence)', false],
+    ['MIX OF IN-PERSON AND ONLINE SECTION (campus presence)', false],
+    ['In-person section (Campus presence)', false],
+    ['In-person section (Optional campus presence)', false],
+    [null, false], [undefined, false], ['', false],
+  ])('classifies %s from the observed label', (section_type, expected) => {
+    expect(isUnscheduled({ ...course('1', 'COMP 1405', 'A', meeting('', '')), section_type })).toBe(expected);
+  });
+
+  it('keeps an unscheduled lecture and its scheduled tutorial, excluding only the lecture from conflicts', () => {
+    const parent = { ...course('1', 'COMP 1405', 'A', meeting('Mon Wed', '09:00 - 11:00')), section_type: 'Online Unscheduled Section' };
+    const child = { ...course('2', 'COMP 1405', 'A1', meeting('Wed', '09:00 - 10:00')), section_type: 'In-person section' };
+    const selected: SelectedCourse = { ...select(parent), sections: { A: { parent, children: [child] } } };
+    const other = course('3', 'MATH 1000', 'A', meeting('Mon', '09:00 - 10:00'));
+    expect(generateSchedules([selected, select(other)], preferences)[0]).toEqual([{ parent, child }, { parent: other }]);
+    expect(generateSchedules([selected, select({ ...other, meeting_infos: [meeting('Wed', '09:00 - 10:00')] })], preferences)).toEqual([]);
+  });
+
+  it('keeps an unscheduled tutorial and an entirely unscheduled option, including sections without meeting rows', () => {
+    const parent = { ...course('1', 'COMP 1405', 'A', meeting('', '')), meeting_infos: [], section_type: 'Online Unscheduled Section' };
+    const child = { ...parent, crn: '2', section: 'A1', type: 'Tutorial' };
+    const selected: SelectedCourse = { ...select(parent), sections: { A: { parent, children: [child] } } };
+    expect(generateSchedules([selected], preferences)).toEqual([[{ parent, child }]]);
+    expect(generateSchedules([{ ...selected, disabled: new Set(['1']) }], preferences)).toEqual([]);
+    const scheduledParent = { ...parent, section_type: 'Online Scheduled Section', meeting_infos: [meeting('Mon', '09:00 - 10:00')] };
+    const overlapping = course('3', 'MATH 1000', 'A', meeting('Mon', '09:30 - 10:30'));
+    expect(generateSchedules([{ ...selected, sections: { A: { parent: scheduledParent, children: [child] } } }, select(overlapping)], preferences)).toEqual([]);
+  });
+
+  it.each(['before', 'after', 'days off'])('excludes unscheduled metadata from %s preference scoring', (preference) => {
+    const unscheduled = { ...course('1', 'COMP 1405', 'A', meeting('Mon Tue Wed Thu Fri', '08:00 - 21:00')), section_type: 'Online Unscheduled Section' };
+    const scheduled = course('2', 'COMP 1405', 'B', meeting('Mon', '10:00 - 11:00'));
+    const results = generateSchedules([select(unscheduled, scheduled)], { ...preferences, beforeEnabled: preference === 'before', afterEnabled: preference === 'after', prioritizeDaysOff: preference === 'days off' });
+    expect(results.map(([{ parent }]) => parent.crn)).toEqual(['1', '2']);
   });
 });

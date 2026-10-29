@@ -14,6 +14,25 @@ describe('course API compatibility', () => {
   });
   it('supports the scraper create, exists, search, update, list, and delete flow', async () => { await request(app).post('/api/course').send(payload).expect(200, { message: 'New course added' }); expect((await request(app).get('/api/course/exists/12345').expect(200)).body.exists).toBe(true); const search = await request(app).get('/api/course/search').query({ query: 'comp 1405' }).expect(200); expect(search.body.data.A.parent.meeting_infos[0].days).toBe('Mon Wed'); await request(app).put('/api/course/crn/12345').send({ instructor: 'Grace', meeting_infos: payload.meeting_infos }).expect(200); const list = await request(app).get('/api/courses').expect(200); expect(list.body.courses[0]).toMatchObject({ instructor: 'Grace', meetings: [expect.objectContaining({ room: '1' })] }); await request(app).delete('/api/course/crn/12345').expect(200); });
   it('rejects missing course codes and reports duplicates without breaking the legacy contract', async () => { await request(app).get('/api/course/search').expect(400); await request(app).post('/api/course').send(payload).expect(200); await request(app).post('/api/course').send(payload).expect(200, { message: 'CRN already exists, duplicate' }); });
+  it('persists section delivery types independently of meeting rows and supports updates and clearing', async () => {
+    const sectionType = 'Online Unscheduled Section with In-Person Assessments (Campus presence)';
+    await request(app).post('/api/course').send({ ...payload, section_type: sectionType, meeting_infos: [] }).expect(200);
+    await request(app).post('/api/course').send({ ...payload, crn: '12346', section: 'A1', section_type: 'In-person section (Campus presence)' }).expect(200);
+    const search = await request(app).get('/api/course/search').query({ query: 'COMP 1405' }).expect(200);
+    expect(search.body.data.A.parent).toMatchObject({ section_type: sectionType, meeting_infos: [] });
+    expect(search.body.data.A.children[0]).toMatchObject({ section_type: 'In-person section (Campus presence)', meeting_infos: [expect.objectContaining({ days: 'Mon Wed' })] });
+    await request(app).put('/api/course/crn/12345').send({ instructor: 'Grace' }).expect(200);
+    expect((await request(app).get('/api/courses')).body.courses[0].section_type).toBe(sectionType);
+    await request(app).put('/api/course/crn/12345').send({ section_type: 'Online Scheduled Section' }).expect(200);
+    expect((await request(app).get('/api/courses')).body.courses[0].section_type).toBe('Online Scheduled Section');
+    await request(app).put('/api/course/crn/12345').send({ section_type: null }).expect(200);
+    expect((await request(app).get('/api/courses')).body.courses[0].section_type).toBeNull();
+  });
+  it('does not invent a delivery type when the scraper has not supplied one', async () => {
+    await request(app).post('/api/course').send(payload).expect(200);
+    const search = await request(app).get('/api/course/search').query({ query: 'COMP 1405' }).expect(200);
+    expect(search.body.data.A.parent.section_type).toBeNull();
+  });
 });
 
 describe('multiple catalogs', () => {

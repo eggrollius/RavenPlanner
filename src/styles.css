@@ -142,3 +142,14 @@ footer{flex-direction:column;gap:8px}
 
 @media(prefers-reduced-motion:reduce){input[type="checkbox"],input[type="checkbox"]::after,.course-chevron,.course-heading,.search-fields,.search-fields button,.preference,.term-trigger,.term-chevron{transition:none}}
 @media(forced-colors:active){input[type="checkbox"]{appearance:auto;-webkit-appearance:auto;box-shadow:none}input[type="checkbox"]::after{display:none}}
+
+.calendar-scroll{overflow-x:auto;padding-top:10px;padding-bottom:8px}
+.untimed-classes{margin-top:22px;padding:18px;border:1px solid var(--line);border-radius:10px;background:#f8f7f3}
+.untimed-classes h3{margin:0;display:flex;align-items:center;gap:9px;font-size:16px}
+.class-count{border:1px solid var(--line);border-radius:99px;padding:2px 8px;font-size:12px}
+.untimed-classes p,.calendar-note{color:var(--muted);font-size:14px;line-height:1.5}
+.untimed-classes p{margin:8px 0 14px}
+.untimed-classes ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.untimed-classes li{display:flex;flex-direction:column;gap:5px;padding:12px;background:#fff;border:1px solid #e4e0d9;border-radius:8px;font-size:14px;overflow-wrap:anywhere}
+.untimed-classes li>div{display:flex;flex-wrap:wrap;gap:5px 14px;align-items:baseline}
+.untimed-classes li>div span,.untimed-classes small{color:var(--muted);font-size:12px}
