@@ -1,21 +1,15 @@
-import { searchCourse } from '../api';
-import type { Catalog, Course, SelectedCourse } from '../types';
-import type { Plan } from './schema';
-import type { SolveResult } from './solver';
+import { searchCourse } from '../api.js';
+import type { Catalog, Course } from '../types.js';
+import type { SolveResult } from './solver.js';
+import type { AdvisorTools, CourseSummary } from './contracts.js';
+export type { AdvisorTools, CourseSummary } from './contracts.js';
 
-export interface CourseSummary { code: string; name: string; instructors: string[] }
-export interface AdvisorTools {
-  search(query: string, signal: AbortSignal): Promise<CourseSummary[]>;
-  sections(code: string, signal: AbortSignal): Promise<SelectedCourse>;
-  solve(plan: Plan, courses: SelectedCourse[], previousCRNs: string[], signal: AbortSignal): Promise<SolveResult>;
-}
-
-export function createTools(catalog: Catalog): AdvisorTools {
+export function createTools(catalog: Catalog, request: typeof fetch = fetch, solver?: AdvisorTools['solve']): AdvisorTools {
   let directory: CourseSummary[] | undefined;
   return {
     async search(query, signal) {
       if (!directory) {
-        const response = await fetch(`/api/courses?${new URLSearchParams({ term: catalog.term, year: String(catalog.year) })}`, { signal });
+        const response = await request(`/api/courses?${new URLSearchParams({ term: catalog.term, year: String(catalog.year) })}`, { signal });
         if (!response.ok) throw new Error('Unable to search the term catalog. Try again.');
         const payload = await response.json() as { courses: Course[] };
         if (!Array.isArray(payload.courses)) throw new Error('The catalog response is invalid.');
@@ -34,11 +28,11 @@ export function createTools(catalog: Catalog): AdvisorTools {
       return directory.filter((course) => tokens.every((token) => `${course.code} ${course.name} ${course.instructors.join(' ')}`.toLowerCase().includes(token))).slice(0, 20);
     },
     async sections(code, signal) {
-      const sections = await searchCourse(code, catalog, signal);
+      const sections = await searchCourse(code, catalog, signal, request);
       if (!Object.keys(sections).length || Object.values(sections).some(({ parent, children }) => [parent, ...children].some((course) => course.course_code !== code || course.term !== catalog.term || course.year !== catalog.year))) throw new Error(`${code}: no verified sections in this term.`);
       return { code, sections, disabled: new Set() };
     },
-    solve(plan, courses, previousCRNs, signal) {
+    solve: solver || function (plan, courses, previousCRNs, signal) {
       return new Promise((resolve, reject) => {
         signal.throwIfAborted();
         const worker = new Worker(new URL('./solver.worker.ts', import.meta.url), { type: 'module' });

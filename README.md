@@ -42,14 +42,19 @@ The names, instructors, CRNs, dates, and times are development examples, not a
 live Carleton catalog. They include overlapping times and early/evening sections
 so you can test section selection, schedule pagination, and time preferences.
 
-## Local AI advisor
+## Server-hosted AI advisor
 
 Switch between **Manual planner** and **AI advisor** using the navigation above
-the planner. AI mode downloads a small model once, then interprets messages on
-your CPU using WebAssembly; no AI server, API key, or WebGPU is needed. It keeps
-its own conversation and planning state for each term and displays results in
-the same timetable component. Start with eligible course codes and preferences,
-then ask for changes such as “Make Tuesdays lighter, but keep my geology elective.”
+the planner. A small GGUF model stays loaded in a dedicated server process,
+and WebSockets deliver replies as tokens are generated. One inference runs at a
+time behind a bounded FIFO queue, leaving the HTTP server free to serve normal
+requests. Clients do not download weights or run inference. No paid LLM API is
+needed. Run `npm run model:download` once on the server before `npm run dev`.
+
+Conversation and planning state remain in the browser per term; messages and
+planning context are sent to the server for each turn. Start with eligible
+course codes and preferences, then ask for changes such as “Make Tuesdays
+lighter, but keep my geology elective.”
 
 The advisor checks actual section data, time conflicts and linked tutorials.
 The catalog has no prerequisite or degree-audit information: the advisor asks

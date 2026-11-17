@@ -1,4 +1,4 @@
-import type { Course, MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types';
+import type { Course, MeetingInfo, Preferences, ScheduleSection, SelectedCourse } from './types.js';
 
 // Only an explicit delivery label establishes that a section is unscheduled.
 // Missing meeting times (including old catalog data) do not establish this.

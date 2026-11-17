@@ -1,62 +1,60 @@
-/* global performance, location, navigator, AbortController, AbortSignal */
-// Run against a local Vite server. Downloads stay in .local/models (never committed).
-// npm run benchmark:advisor -- --base-url=http://127.0.0.1:5175
-import { chromium } from '@playwright/test';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+/* global URL, AbortSignal, setTimeout */
+import { WebSocket } from 'ws';
+import { randomUUID } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
 
-const baseURL = process.argv.find((arg) => arg.startsWith('--base-url='))?.split('=')[1] || 'http://127.0.0.1:5173';
-const modelIds = (process.argv.find((arg) => arg.startsWith('--models='))?.split('=')[1] || 'qwen,smol').split(',');
-const caseNames = process.argv.find((arg) => arg.startsWith('--cases='))?.split('=')[1]?.split(',');
-const runtimeSourceSHA256 = createHash('sha256').update((await Promise.all(['model', 'grounding', 'schema'].map((file) => readFile(`src/advisor/${file}.ts`)))).join('\n')).digest('hex');
-const browser = await chromium.launchPersistentContext('.local/benchmark-browser', { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox'] });
-try {
-  const page = await browser.newPage();
-  page.on('pageerror', (error) => console.error(error.message));
-  page.on('console', (message) => { if (message.text().startsWith('benchmark:')) console.log(message.text()); });
-  await mkdir('docs/verification', { recursive: true });
-  await page.exposeFunction('saveBenchmark', async (results) => writeFile('docs/verification/advisor-model-benchmark.json', JSON.stringify(results, null, 2) + '\n'));
-  await page.goto(baseURL);
-  const results = await page.evaluate(async ({ modelIds, caseNames, runtimeSourceSHA256 }) => {
-    const { LocalModel } = await import('/src/advisor/model.ts');
-    const { emptyPlan } = await import('/src/advisor/schema.ts');
-    const cases = [
-      { name: 'profile', text: "I'm a 4th-year CS student. Plan my schedule. I want Fridays off, I like geology electives, and I hate Professor X.", plan: emptyPlan(), expected: { tool: 'plan', patch: { program: 'CS', year: 4, daysOff: ['Fri'], electiveQuery: 'geology', avoidInstructors: ['X'] } } },
-      { name: 'explicit-courses', text: 'I am eligible for COMP 1405, MATH 1007 and ERTH 1006. Take these three courses.', plan: { ...emptyPlan(), daysOff: ['Fri'] }, expected: { tool: 'plan', patch: { addCourses: ['COMP 1405', 'MATH 1007', 'ERTH 1006'], courseCount: 3 } } },
-      { name: 'refinement', text: 'Make my Tuesdays lighter, but keep my geology elective.', plan: { ...emptyPlan(), courses: ['COMP 1405', 'ERTH 1006'], courseCount: 2, daysOff: ['Fri'] }, expected: { tool: 'plan', patch: { lightDays: ['Tue'], keepCourses: ['ERTH 1006'] } } },
-      { name: 'release', text: 'Fridays are allowed now. Never schedule Professor X. No classes before 10:00.', plan: { ...emptyPlan(), daysOff: ['Fri'], avoidInstructors: ['X'] }, expected: { tool: 'plan', patch: { allowDays: ['Fri'], excludeInstructors: ['X'], earliest: '10:00' } } },
-      { name: 'search', text: 'What geology electives are offered this term?', plan: emptyPlan(), expected: { tool: 'search' } },
-    ];
-    const subset = (actual, expected) => Object.entries(expected).every(([key, value]) => Array.isArray(value) ? JSON.stringify(actual?.[key]) === JSON.stringify(value) : value && typeof value === 'object' ? subset(actual?.[key], value) : actual?.[key] === value);
-    const result = { date: new Date().toISOString(), runtimeSourceSHA256, userAgent: navigator.userAgent, results: [] };
-    console.log('benchmark: storage', JSON.stringify(await navigator.storage.estimate()));
-    for (const id of modelIds) {
-      const model = new LocalModel();
-      const start = performance.now();
-      let lastProgress = '';
-      await model.load(id, (text) => { const stage = text.startsWith('Downloading') ? text.split('/')[0].replace(/\d+/g, (n) => String(Math.floor(Number(n) / 100) * 100)) : text; if (stage !== lastProgress) { console.log('benchmark:', id, text); lastProgress = stage; } }, new AbortController().signal, `${location.origin}/.local/models/${id}.gguf`);
-      console.log('benchmark:', id, 'loaded');
-      const loadMs = Math.round(performance.now() - start);
-      const casesResult = [];
-      for (const test of cases.filter((test) => !caseNames || caseNames.includes(test.name))) {
-        const began = performance.now();
-        try {
-          const decision = await model.decide({ plan: test.plan, messages: [{ role: 'user', content: test.text }], observations: [] }, AbortSignal.timeout(180000));
-          const normalized = JSON.parse(JSON.stringify(decision));
-          if (normalized.patch?.electiveQuery === 'ERTH') normalized.patch.electiveQuery = 'geology';
-          const extraFields = decision.tool === 'plan' && Object.keys(decision.patch).some((key) => !Object.hasOwn(test.expected.patch || {}, key));
-          const groundedQuery = decision.tool !== 'search' || /geolog|\berth\b|\bearth\b/i.test(decision.query);
-          casesResult.push({ name: test.name, ms: Math.round(performance.now() - began), pass: subset(normalized, test.expected) && !extraFields && groundedQuery, decision });
-        } catch (error) { casesResult.push({ name: test.name, ms: Math.round(performance.now() - began), pass: false, error: String(error) }); }
-        console.log('benchmark:', id, JSON.stringify(casesResult.at(-1)));
+const origin = new URL(process.argv.find((arg) => arg.startsWith('--base-url='))?.slice('--base-url='.length) || 'http://127.0.0.1:5173').origin;
+const plan = { program: '', year: null, courseCount: null, courses: [], keepCourses: [], daysOff: [], preferredDaysOff: [], lightDays: [], avoidInstructors: [], excludeInstructors: [], earliest: '', latest: '', preferAfter: '', preferBefore: '', electiveQuery: '' };
+let session = { plan, messages: [], previousCRNs: [] };
+const samples = []; let probing = true; let failures = 0;
+const probe = async () => {
+  while (probing) {
+    await Promise.all(['/api/health', '/api/catalog', '/api/course/search?query=ERTH+1006&term=FALL&year=2026'].map(async (endpoint) => {
+      const started = Date.now();
+      try { const response = await fetch(origin + endpoint, { signal: AbortSignal.timeout(5000) }); if (!response.ok) throw new Error('HTTP request failed'); await response.arrayBuffer(); samples.push(Date.now() - started); }
+      catch { failures++; }
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+};
+const status = await fetch(`${origin}/api/advisor/status`).then((response) => response.json());
+if (!status.configured) throw new Error('Install the server model with npm run model:download before benchmarking.');
+const probes = probe();
+const results = [];
+function turn(text) {
+  return new Promise((resolve, reject) => {
+    const url = new URL('/api/advisor', origin); url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(url, { origin });
+    const started = Date.now(); let firstTokenMs; let deltas = 0; let streamed = '';
+    const id = randomUUID();
+    socket.on('open', () => socket.send(JSON.stringify({ type: 'turn', id, catalog: { term: 'FALL', year: 2026 }, session, text })));
+    socket.on('error', reject);
+    socket.on('message', (data) => {
+      const event = JSON.parse(data.toString());
+      if (event.type === 'delta') { firstTokenMs ??= Date.now() - started; deltas++; streamed += event.text; }
+      if (event.type === 'error') { socket.close(); reject(new Error(event.message)); }
+      if (event.type === 'done') {
+        socket.close();
+        if (streamed !== event.result.reply || deltas < 2) return reject(new Error('Incomplete token stream.'));
+        const result = { text, ms: Date.now() - started, firstTokenMs, deltas };
+        results.push(result); console.log(JSON.stringify(result));
+        session = { plan: event.result.plan, previousCRNs: event.result.schedules?.[0]?.flatMap(({ parent, child }) => [parent.crn, ...(child ? [child.crn] : [])]) || session.previousCRNs, messages: [...session.messages, { role: 'user', content: text }, { role: 'assistant', content: event.result.reply }] };
+        resolve(event.result);
       }
-      result.results.push({ model: id, loadMs, threads: model.threads, cases: casesResult });
-      await globalThis.saveBenchmark(result);
-      await model.clearCache();
-    }
-    return result;
-  }, { modelIds, caseNames, runtimeSourceSHA256 });
+    });
+  });
+}
+const load = (schedule, day) => schedule.flatMap(({ parent, child }) => [parent, ...(child ? [child] : [])]).filter((course) => !/^Online Unscheduled/i.test(course.section_type || '')).flatMap((course) => course.meeting_infos).filter((meeting) => meeting.days.split(/\s+/).includes(day)).reduce((sum, meeting) => { const [start, end] = meeting.time.split(' - ').map((time) => { const [h, m] = time.split(':').map(Number); return h * 60 + m; }); return sum + end - start; }, 0);
+try {
+  await turn("I'm a 4th-year CS student. I want Fridays off, I like geology electives, and I hate Professor X.");
+  const before = await turn('I am eligible for COMP 1405, MATH 1007 and ERTH 1006. Take these three courses.');
+  const after = await turn('Make my Tuesdays lighter, but keep my geology elective.');
+  const beforeMinutes = load(before.schedules[0], 'Tue'); const afterMinutes = load(after.schedules[0], 'Tue');
+  if (afterMinutes >= beforeMinutes || load(after.schedules[0], 'Fri') !== 0 || !after.plan.keepCourses.includes('ERTH 1006')) throw new Error('Schedule refinement failed.');
+  probing = false; await probes;
+  samples.sort((a, b) => a - b);
+  const report = { date: new Date().toISOString(), inference: 'server CPU / isolated native process', turns: results, tuesdayMinutesBefore: beforeMinutes, tuesdayMinutesAfter: afterMinutes, fridayMinutes: 0, httpRequests: samples.length + failures, httpFailures: failures, httpP95Ms: samples[Math.floor(samples.length * 0.95)], httpMaxMs: samples.at(-1), finalPlan: after.plan };
   await mkdir('docs/verification', { recursive: true });
-  await writeFile('docs/verification/advisor-model-benchmark.json', JSON.stringify(results, null, 2) + '\n');
-  console.log(JSON.stringify(results, null, 2));
-} finally { await browser.close(); }
+  await writeFile('docs/verification/server-advisor-workflow.json', JSON.stringify(report, null, 2) + '\n');
+  console.log(JSON.stringify(report, null, 2));
+} finally { probing = false; await probes; }

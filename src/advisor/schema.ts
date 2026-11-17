@@ -53,7 +53,7 @@ export const decisionSchema = {
 const courseCode = /^[A-Z]{4} \d{4}[A-Z]?$/;
 export const normalizeCode = (code: string) => code.trim().toUpperCase().replace(/^([A-Z]{4})\s*(\d{4}[A-Z]?)$/, '$1 $2');
 const object = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value));
-const fail = (): never => { throw new Error('The local model returned an invalid tool argument. Please rephrase your request.'); };
+const fail = (): never => { throw new Error('The advisor returned an invalid tool argument. Please rephrase your request.'); };
 
 export function validatePatch(input: unknown): PlanPatch {
   if (!object(input)) return fail();

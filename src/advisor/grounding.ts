@@ -1,5 +1,5 @@
-import type { DecisionContext } from './model';
-import { decisionSchema, patchProperties, days } from './schema';
+import type { DecisionContext } from './contracts.js';
+import { decisionSchema, patchProperties, days } from './schema.js';
 
 // Small models copy examples surprisingly often. Limit the grammar to fields
 // relevant to this turn and identifiers actually mentioned or retrieved.

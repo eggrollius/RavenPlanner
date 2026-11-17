@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "benchmark:advisor": "node scripts/benchmark-advisor.mjs",
+    "model:download": "node scripts/download-advisor-model.mjs",
     "dev": "tsx scripts/dev.ts",
     "dev:external": "concurrently --kill-others \"tsx watch server/index.ts\" \"vite --host 0.0.0.0\"",
     "db:seed": "tsx scripts/dev.ts --seed",
@@ -22,16 +23,17 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.dev.json",
     "validate": "npm run lint && npm run typecheck && npm test && npm run build",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm run build && node scripts/prepare-advisor.mjs"
   },
   "dependencies": {
-    "@wllama/wllama": "^3.8.1",
     "cheerio": "^1.2.0",
     "express": "^4.21.2",
+    "node-llama-cpp": "^3.22.3",
     "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "selenium-webdriver": "^4.51.0"
+    "selenium-webdriver": "^4.51.0",
+    "ws": "^8.23.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.13",
@@ -48,6 +50,7 @@
     "@types/react-dom": "^18.3.5",
     "@types/selenium-webdriver": "^4.35.7",
     "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^9.1.2",
     "eslint": "^10.11.0",

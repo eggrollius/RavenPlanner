@@ -1,173 +1,165 @@
-# Browser-local academic advisor prototype
+# Server-hosted academic advisor
 
-Run `npm ci && npm run dev`, open the printed localhost URL, and select **AI
-advisor**. Select **Load model** and leave the tab open during the first model
-download. Use a normal browser profile with persistent storage, HTTPS (or
-localhost), and enough free memory for a small model. The CPU runtime works
-without WebGPU. Cross-origin isolation enables two CPU threads; deployments
-without it use one. The manual planner does not download the AI runtime or weights.
+## Run locally
 
-SmolLM2 360M is the default; Qwen 2.5 0.5B is an alternative. The isolated CPU
-comparison on Chromium 154 / Linux with a two-core quota and two inference
-threads produced these results (Q4_K_M quantization, five guarded intent cases):
+```bash
+npm ci
+npm run model:download
+npm run dev
+```
 
-| Model | Weights | Passed | Median turn | Range |
-| --- | --- | --- | --- | --- |
-| SmolLM2 360M | 271 MB | 5/5 | 18.7 s | 18.2–40.3 s |
-| Qwen 2.5 0.5B | 491 MB | 5/5 | 33.1 s | 22.3–51.5 s |
+Open the printed URL and choose **AI advisor**. The server loads the pinned
+SmolLM2 360M Q4_K_M GGUF (~271 MB) from `.local/models/smol.gguf` in the background
+and keeps it resident. Clients never download weights or a WASM inference runtime.
+Native CPU inference uses `node-llama-cpp`; no paid LLM API or GPU is required.
+The default is one CPU thread on a two-core host, leaving a core for the web/API.
+Allow at least 1 GB RAM for the application and model, plus the database.
 
-These include model prefill and generation, excluding course API/scheduler time.
-The first profile turn was the slowest for SmolLM2. Loading weights from a local
-loopback URL into the browser took 6.3 s for SmolLM2 and 15.6 s for Qwen; internet
-download times depend on the connection. This remains a CPU prototype with
-noticeable inference latency. Other browsers/devices are not yet verified.
-The full three-turn UI workflow took 42.7 s, 51.7 s and 69.0 s per turn with
-conversation and current-schedule context. It reduced Tuesday meetings from
-180 to 90 minutes, preserved the geology elective and Friday off, restored the
-proposal after reload, and recorded zero external AI requests or page errors.
-See [desktop/mobile captures](screenshots/local-advisor/README.md) and
-[the workflow record](verification/advisor-ui-workflow.json).
-The raw decision/latency records are in
-[`verification/advisor-model-benchmark.json`](verification/advisor-model-benchmark.json).
-An earlier unrestricted prompt failed all five strict intent cases for both
-models; its records are retained in
-[`verification/advisor-model-benchmark-unrestricted.json`](verification/advisor-model-benchmark-unrestricted.json).
+The download command caches the model, verifies its size, and installs it by an
+atomic rename. It does not overwrite an existing model. Models are not downloaded
+on user requests. With no model installed, manual planning and catalog/health
+requests remain available; AI mode explains that the server is not configured.
 
 Try this conversation against the explicitly synthetic development catalog:
 
-1. “I'm a 4th-year CS student. Plan my schedule. I want Fridays off, I like
-   geology electives, and I hate Professor X.”
-2. Answer the eligibility question: “I am eligible for COMP 1405, MATH 1007 and
-   ERTH 1006. Take these three courses.” These are demo choices, not a suggested
-   fourth-year curriculum.
+1. “I'm a 4th-year CS student. I want Fridays off, I like geology electives, and
+   I hate Professor X.”
+2. “I am eligible for COMP 1405, MATH 1007 and ERTH 1006. Take these three courses.”
 3. “Make my Tuesdays lighter, but keep my geology elective.”
-4. “Fridays are allowed now.” Or: “Never schedule Professor X.”
 
-The calendar shows the best options found. The planning brief distinguishes
-requirements and preferences. “Fridays off” excludes Friday meetings, including
-linked tutorials. “Prefer Fridays off” ranks options. Instructor dislikes are
-preferences; “never” makes an exclusion mandatory. “Keep” pins a course code
-while allowing its section to change. Ask to release a pinned course before
-removing it. Existing courses are never implicitly dropped to satisfy a count.
+These course choices demonstrate the planner, not a recommended fourth-year
+curriculum. Requirements stay enforced across turns; preferences rank valid
+options. “Keep” pins a course while allowing its section to change. “Never
+Professor X” makes a dislike mandatory. The calendar reuses the manual planner's
+visualization, and switching modes retains separate plans.
 
-Chat, structured constraints and selected CRNs are stored in localStorage,
-separately for each term/year. Model files use the runtime's browser cache.
-Reloading rechecks sections with the API before displaying a saved proposal.
-Changing modes or terms cancels pending work; **Stop** also cancels a turn.
-**New conversation** clears the active term's chat and plan; **Clear downloaded
-models** removes cached weights. Browser storage eviction/private mode can
-prevent persistence; quota failures are shown as recoverable load errors.
+## Concurrency and streaming
 
-## Architecture
+```mermaid
+flowchart LR
+  Browser <-->|HTTP catalog requests| Web[Express HTTP server]
+  Browser <-->|WebSocket status / tokens / result| Web
+  Web -->|Bounded FIFO, one active turn| Inference[Native inference child process]
+  Inference --> Model[Resident GGUF model]
+  Inference -->|Course API reads| Web
+  Web --> DB[(PostgreSQL)]
+```
 
-`src/advisor/model.ts` runs quantized GGUF models in wllama/llama.cpp WASM workers
-with `n_gpu_layers: 0`. Pinned Hugging Face revisions make downloads repeatable.
-The runtime and WASM ship in the client bundle; there is no AI backend endpoint,
-API key, external inference call, or remote chat transport. Downloads are network
-requests for weights, not inference. Course data still comes from RavenPlanner.
+There is one inference process and one resident model per web-server instance.
+One complete advisor turn runs at a time, with four waiting requests by default.
+Queue positions update when requests leave. Overflow gets an explicit busy
+response. No Redis, external inference service, or distributed queue is needed
+for the current traffic level. With multiple web instances, each has its own
+model/queue and corresponding memory requirements.
 
-The controller gives the model a context-specific grammar for three typed tools:
+CPU inference, grammar generation and scheduling run in the child, not the HTTP
+event loop. The child uses the same catalog API and scheduler as the manual
+planner. Each call clears the model's context/KV history; model weights are
+shared, student chat histories are not. Each request carries validated planning
+state, bounded history and the selected term. Application code does not persist
+chat on the server. The existing per-term localStorage remains the durable state.
 
-| Tool | Behavior |
+`/api/advisor` upgrades to a same-origin WebSocket. Messages are JSON:
+
+| Direction | Message |
 | --- | --- |
-| `search` | Search the selected term's catalog by code, name, subject or instructor; feed results back to the model |
-| `plan` | Apply an additive validated patch, retrieve real sections, ask for missing course/count information, then generate a timetable |
-| `clarify` | Ask a grounded controller-written question, with retrieved catalog matches when available |
+| Client → server | `turn`: request ID, term, saved session and latest text |
+| Client → server | `cancel`: the current request ID |
+| Server → client | `status`: queued position, loading or tool progress |
+| Server → client | `delta`: decoded text from the native model's `onTextChunk` callback |
+| Server → client | `done`: validated final answer, plan, schedules and tool trace |
+| Server → client | `error` or `cancelled`: terminal failure/cancellation |
 
-The controller bounds each turn to four model/tool steps and three minutes,
-retries one malformed model response, validates every argument, and commits only
-completed turns. Course codes must come from student messages or retrieved
-catalog results. Model-generated schedules, CRNs, arbitrary URLs, code execution
-and academic requirements are not accepted. Final schedule summaries and failure
-explanations are constructed from tool output. An expandable tool trace shows
-what happened locally.
+The native model first produces validated tool calls. After the tools verify the
+facts, it generates the response under a grammar allowing that verified answer
+and an optional neutral lead-in. This deliberately narrow rendering pass makes
+the visible stream actual model generation while preventing invented courses or
+academic claims in partial text. There is no simulated typing, fixed delay, or
+character-by-character replay of an already completed response.
 
-A small local hint layer narrows tool/field choices for recognizable requests
-and anchors literal course codes, study years, counts, weekdays and unambiguous
-references such as “keep my geology elective.” It does not ask a language model
-to regenerate known identifiers or numeric facts. Free-form intent and values
-outside those anchors are interpreted by the local model. This hybrid approach
-is deliberate: the unrestricted small-model baseline copied example values and
-missed constraints. The integrated benchmark measures the model **with** these
-guards, rather than claiming the raw model can reliably call arbitrary tools.
+The client shows text immediately as deltas arrive. Only `done` commits the
+message, preferences and calendar. Stop, navigation, disconnection and errors
+discard partial output and retain the last completed proposal. A saved proposal
+is rechecked against the catalog on reload without needing inference.
 
-Scheduling reuses `src/scheduler.ts`, including term-specific section groups,
-date/time conflict checks and required linked tutorials/labs. The AI adapter
-filters closed sections, unverified meeting information, excluded instructors
-and hard day/time constraints. It ranks preferred days, instructors, time windows
-and minutes on lighter days, using the current section choices to break ties.
-Paging the calendar updates the current proposal supplied to subsequent turns.
-A separate scheduling worker keeps the interface responsive. Search retains the
-best ten results among at most 50,000 candidate visits and discloses truncation.
-An impossible change keeps the old calendar visibly marked as a previous
-proposal, while retaining the newly requested constraints.
+The deadline includes queue wait and generation. Closing a socket removes its
+waiting job or aborts its active inference. Another job cannot start until the
+worker acknowledges cancellation; after three seconds a hung worker is killed
+and restarted before queued work continues. Unexpected crashes fail outstanding
+requests cleanly and allow retry. Shutdown terminates sockets, cancels jobs and
+releases the worker. Same-origin upgrade checks, 128 KB request limits, one turn
+per connection, a 32-connection limit, outbound-buffer limits and ping/pong
+cleanup bound the transport's resource use.
 
-## Academic and catalog limits
+`GET /api/advisor/status` reports configuration, worker phase and queue counts
+without waiting for inference. Normal HTTP requests never enter the model queue.
 
-This is a timetable advisor, not a degree audit. The existing catalog has **no
-prerequisite, transcript, completed-course, program-requirement or graduation-rule
-data**. The advisor asks for eligible course codes instead of inventing rules
-from a student's program/year. No registration is performed. Its guarantees are
-limited to the supplied meeting and section data; the existing scraper retains
-only the last meeting row for each section. Check Carleton Central before
-registering. Catalog refreshes can change availability after a proposal.
+## Configuration and deployment
 
-The current section grouping supports a lecture with one linked tutorial/lab
-choice. A section requiring linked components that are missing or explicitly
-conjunctive is excluded from AI proposals and explained. Only explicitly
-`Online Unscheduled` courses can omit meeting times. Unverifiable/TBA and weekend
-meetings, or meetings outside the existing 07:00–22:00 calendar, are excluded.
-AI mode supports up to eight courses and eight names in each instructor list.
-If no valid option is found, it does not silently soften constraints or claim
-that a truncated search proved impossibility.
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `RAVEN_ADVISOR_MODEL_PATH` | `.local/models/smol.gguf` | Server GGUF path; operators can provision another compatible model |
+| `RAVEN_ADVISOR_THREADS` | at most 2, leaving one available core | Native inference CPU threads; range 1–16 |
+| `RAVEN_ADVISOR_QUEUE_SIZE` | `4` | Waiting requests in addition to one active turn; range 0–32 |
+| `RAVEN_ADVISOR_TIMEOUT_MS` | `180000` | Queue + processing deadline; range 1–600 seconds |
+| `RAVEN_ADVISOR_DOWNLOAD_ON_BUILD` | unset | Heroku-only opt-in to downloading the pinned model during postbuild |
 
-Small local models can still misunderstand a request. Inspect the visible brief
-and ask for corrections; validated syntax is not a guarantee of correct intent.
-The prototype deliberately avoids a vector database, external agent framework,
-model server, and separate scheduling implementation.
+The example `.env` sets one inference thread. Keep CPU capacity for HTTP and the
+database when increasing it. Model changes require restarting the server process;
+clients cannot trigger model switching or arbitrary file downloads.
 
-## Verification and model comparison
+Docker uses Debian/glibc with the native runtime's OpenMP dependency. Compose
+retains two services, `server` and `db`, and mounts `.local/models` read-only at
+`/models`. Download on the host before `docker compose up --build`; alternatively
+set `RAVEN_ADVISOR_MODEL_DIR` and `RAVEN_ADVISOR_MODEL_FILE` for the mount. Missing
+weights do not prevent the container health check from succeeding.
+
+For Heroku, set `NODE_LLAMA_CPP_GPU=false`, `NODE_LLAMA_CPP_SKIP_DOWNLOAD=true`,
+`RAVEN_ADVISOR_DOWNLOAD_ON_BUILD=true`,
+`RAVEN_ADVISOR_MODEL_PATH=.local/models/smol.gguf` and the desired thread/queue
+limits, then create a new build. Postbuild prunes unused optional CUDA/Vulkan
+packages and bundles the model in the slug, so dynos do not download it at
+runtime. `app.json` provides defaults for new apps; existing apps need their
+config vars set explicitly. The process uses the usual `web: npm start` Procfile.
+Reverse proxies must forward WebSocket upgrades and preserve the original Host
+header. No additional public inference port is exposed.
+
+## Verification and limits
 
 ```bash
 npm run validate
 npm run test:e2e
+# With the server model installed, run real native inference in the browser flow:
+RAVEN_AI_E2E=1 npm run test:e2e
+# Against an already-running development stack:
+npm run benchmark:advisor -- --base-url=http://127.0.0.1:5173
 ```
 
-The normal checks cover scheduling, tool validation, multi-turn conversations,
-missing/unavailable courses, impossible constraints, persistence, model errors,
-mode separation, and the existing planner/API/scraper flows. They do not download
-model weights. The fast conversation tests inject decisions so they can exercise
-controller failures deterministically; they are separate from the real-inference
-checks below.
+Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/path/to/chromium` for a system browser.
+Fast tests cover bounded FIFO admission, HTTP responsiveness during child CPU
+work, queued/disconnected cancellation, active/queued deadlines, crashes,
+recovery, invalid requests, origins, missing models, shutdown, partial-text UI
+rendering and preservation of completed state. They do not download model weights.
+The opt-in browser test uses real server CPU inference, verifies text arrives
+before completion, exercises another queued client, checks normal HTTP traffic
+during inference, and confirms the browser never requests GGUF/WASM assets.
 
-Download the two candidates once for benchmarking (about 762 MB total):
+The real server benchmark completed the three-turn workflow, reduced Tuesday
+classes from 180 to 90 minutes and retained Friday off and ERTH 1006. It emitted
+335 generated text chunks. During inference, 705 health/catalog/course requests
+completed with zero failures: p95 118 ms, max 836 ms. End-to-end turns took
+29.4 s, 16.4 s and 26.2 s; first visible tokens arrived at 22.4 s, 8.8 s and 13.1 s
+after tool interpretation/validation. These are prototype measurements on a
+two-core Linux host with one inference thread, not production latency promises.
+See [the recorded measurements](verification/server-advisor-workflow.json).
 
-```bash
-mkdir -p .local/models
-curl --fail --location 'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf' --output .local/models/qwen.gguf
-curl --fail --location 'https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/7be6f65f1db715fe5dc5a4634c0d459b4eed42ec/SmolLM2-360M-Instruct-Q4_K_M.gguf' --output .local/models/smol.gguf
-npm run dev
-```
-
-In another terminal:
-
-```bash
-npm run benchmark:advisor
-RAVEN_AI_E2E=1 npm run test:e2e -- --grep 'real local model'
-```
-
-Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/path/to/chromium` if using a system
-Chromium instead of Playwright's browser download. The benchmark accepts
-`--base-url=http://127.0.0.1:5173` and uses a persistent profile under `.local`.
-It loads real GGUF weights, runs five CPU intent/tool cases for both candidates,
-prints each decision and latency, and writes
-`docs/verification/advisor-model-benchmark.json`. The real-model E2E uses an
-ephemeral seeded API, loads the same weights from local disk, and drives the UI
-through the full conversation, refinement, reload and mobile layout. It checks
-that no external AI requests occur after model loading (the application's existing
-Google Fonts requests are excluded). Screenshots and traces
-are written under ignored `test-results`.
-
-Weights, caches, browser profiles and generated build output are excluded from
-Git. Model latency and correctness must be evaluated on the intended student
-devices; a five-case sample does not establish broad language understanding.
+The catalog has no prerequisite, transcript, completed-course or degree-audit
+data. Students supply eligible course codes and confirm academic requirements
+with Carleton. The existing scraper retains only the final meeting row. The
+advisor checks the available section/time data, excludes unverified/TBA meetings,
+and does not silently relax hard constraints. Conjunctive linked components that
+the current section grouping cannot represent require manual verification.
+Search retains the best ten results among at most 50,000 candidate visits and
+discloses truncation. Small-model intent understanding is constrained by the same
+literal/field grounding guards as before; this is a timetable prototype, not an
+open-ended degree audit. Models, browser profiles and build output stay out of Git.

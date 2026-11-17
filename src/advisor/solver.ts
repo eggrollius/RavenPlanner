@@ -1,7 +1,7 @@
-import { isUnscheduled, scheduledMeetings, scheduleCourses, searchSchedules, timeRange } from '../scheduler';
-import type { Course, ScheduleSection, SelectedCourse } from '../types';
-import { days } from './schema';
-import type { Plan } from './schema';
+import { isUnscheduled, scheduledMeetings, scheduleCourses, searchSchedules, timeRange } from '../scheduler.js';
+import type { Course, ScheduleSection, SelectedCourse } from '../types.js';
+import { days } from './schema.js';
+import type { Plan } from './schema.js';
 
 export interface SolveResult { schedules: ScheduleSection[][]; truncated: boolean; excluded: string[]; preferenceNotes: string[] }
 const minutes = (time: string) => { const [h, m] = time.split(':').map(Number); return h * 60 + m; };

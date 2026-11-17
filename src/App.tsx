@@ -70,7 +70,7 @@ export default function App() {
   return <>
     <Header catalog={catalog} catalogs={catalogs} onChange={changeCatalog} />
     <main>
-      <nav className="mode-nav" aria-label="Planning mode"><button type="button" aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual planner</button><button type="button" aria-pressed={mode === 'ai'} onClick={() => setMode('ai')}>AI advisor <span>Local</span></button></nav>
+      <nav className="mode-nav" aria-label="Planning mode"><button type="button" aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual planner</button><button type="button" aria-pressed={mode === 'ai'} onClick={() => setMode('ai')}>AI advisor</button></nav>
       {mode === 'ai' && !catalog && <section className="panel">{error ? <div role="alert">{error} <button type="button" onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Retry catalog</button></div> : <p role="status">Loading course catalog…</p>}</section>}
       {mode === 'ai' && catalog && <Suspense fallback={<div className="panel" role="status">Opening local advisor…</div>}><AdvisorPanel key={`advisor-${key}`} catalog={catalog} /></Suspense>}
       <div hidden={mode !== 'manual'}>

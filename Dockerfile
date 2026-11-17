@@ -1,4 +1,6 @@
-FROM node:22-alpine AS build
+FROM node:22-bookworm-slim AS build
+ENV NODE_LLAMA_CPP_GPU=false NODE_LLAMA_CPP_SKIP_DOWNLOAD=true
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libgomp1 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -8,11 +10,12 @@ COPY RavenData ./RavenData
 COPY src ./src
 RUN npm run build
 
-FROM node:22-alpine AS runtime
-ENV NODE_ENV=production PORT=5000
+FROM node:22-bookworm-slim AS runtime
+ENV NODE_ENV=production PORT=5000 NODE_LLAMA_CPP_GPU=false NODE_LLAMA_CPP_SKIP_DOWNLOAD=true
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libgomp1 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --chown=node:node package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev && rm -rf node_modules/@node-llama-cpp/*-cuda* node_modules/@node-llama-cpp/*-vulkan && npm cache clean --force
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 5000

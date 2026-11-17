@@ -1,11 +1,7 @@
-import type { ScheduleSection } from '../types';
-import type { AdvisorModel, Message } from './model';
-import { applyPatch } from './schema';
-import type { Plan } from './schema';
-import type { AdvisorTools, CourseSummary } from './tools';
-
-export interface AdvisorSession { plan: Plan; messages: Message[]; previousCRNs: string[] }
-export interface TurnResult { plan: Plan; reply: string; schedules?: ScheduleSection[][]; trace: string[]; current: boolean }
+import type { AdvisorModel, Message, AdvisorTools, CourseSummary, AdvisorSession, TurnResult } from './contracts.js';
+import { applyPatch } from './schema.js';
+import type { Plan } from './schema.js';
+export type { AdvisorSession, TurnResult } from './contracts.js';
 
 const suggestions = (courses: CourseSummary[]) => courses.length ? courses.slice(0, 8).map((course) => `${course.code} — ${course.name}`).join('\n') : 'No matching courses were found in this term.';
 
@@ -67,7 +63,7 @@ export async function runTurn(session: AdvisorSession, text: string, model: Advi
   }
   for (let step = 0; step < 4; step++) {
     signal.throwIfAborted();
-    progress(step ? 'Reading tool results locally…' : 'Understanding your request locally…');
+    progress(step ? 'Reading course results…' : 'Understanding your request…');
     let decision;
     try { decision = await model.decide({ plan: session.plan, messages, observations, currentSchedule }, signal); }
     catch (error) {
@@ -76,7 +72,7 @@ export async function runTurn(session: AdvisorSession, text: string, model: Advi
       observations.push('Invalid response. Return one valid JSON tool call with validated arguments.');
       continue;
     }
-    trace.push(`local_model: ${decision.tool}`);
+    trace.push(`server_model: ${decision.tool}`);
     if (decision.tool === 'search') {
       progress('Searching this term’s course catalog…');
       const matches = await tools.search(decision.query, signal);
@@ -104,5 +100,5 @@ export async function runTurn(session: AdvisorSession, text: string, model: Advi
     signal.throwIfAborted();
     return { plan, trace, ...proposal };
   }
-  return { plan: session.plan, reply: `I reached the local tool limit. Please give the course codes you want, or ask one narrower question.\n${observations.length ? observations.filter((entry) => entry.startsWith('search(')).join('\n').slice(0, 1500) : ''}`, trace, current: false };
+  return { plan: session.plan, reply: 'I reached the tool limit. Please give the course codes you want, or ask one narrower question. Your saved plan is unchanged.', trace, current: false };
 }

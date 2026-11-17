@@ -1,4 +1,4 @@
-import type { Catalog, CatalogResponse, CourseGroup } from './types';
+import type { Catalog, CatalogResponse, CourseGroup } from './types.js';
 
 export async function getCatalog(signal?: AbortSignal): Promise<CatalogResponse> {
   const response = await fetch('/api/catalog', { signal });
@@ -8,8 +8,8 @@ export async function getCatalog(signal?: AbortSignal): Promise<CatalogResponse>
   return catalog;
 }
 
-export async function searchCourse(query: string, catalog: Catalog, signal?: AbortSignal): Promise<Record<string, CourseGroup>> {
-  const response = await fetch(`/api/course/search?${new URLSearchParams({ query, term: catalog.term, year: String(catalog.year) })}`, { signal });
+export async function searchCourse(query: string, catalog: Catalog, signal?: AbortSignal, request: typeof fetch = fetch): Promise<Record<string, CourseGroup>> {
+  const response = await request(`/api/course/search?${new URLSearchParams({ query, term: catalog.term, year: String(catalog.year) })}`, { signal });
   const payload = await response.json() as { data?: Record<string, CourseGroup>; message?: string };
   if (!response.ok || !payload.data) throw new Error(payload.message || 'Unable to find that course.');
   return payload.data;
