@@ -85,6 +85,7 @@ async function main() {
     console.log(`Local PostgreSQL: ${values.ephemeral ? 'in memory' : dataDir}\nOpen http://localhost:${vitePort}. Try COMP 1405, MATH 1007, and PSYC 1001.`);
     const childEnv = {
       ...process.env,
+      ...Object.fromEntries(Object.entries(env).filter(([key]) => key.startsWith('RAVEN_ADVISOR_'))),
       DATABASE_URL: database.connectionString,
       NODE_ENV: 'development',
       DYNO: '',

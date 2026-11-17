@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-17T01:34:36.089Z",
+  "inference": "server CPU / isolated native process",
+  "turns": [
+    {
+      "text": "I'm a 4th-year CS student. I want Fridays off, I like geology electives, and I hate Professor X.",
+      "ms": 29441,
+      "firstTokenMs": 22448,
+      "deltas": 84
+    },
+    {
+      "text": "I am eligible for COMP 1405, MATH 1007 and ERTH 1006. Take these three courses.",
+      "ms": 16392,
+      "firstTokenMs": 8829,
+      "deltas": 111
+    },
+    {
+      "text": "Make my Tuesdays lighter, but keep my geology elective.",
+      "ms": 26171,
+      "firstTokenMs": 13116,
+      "deltas": 140
+    }
+  ],
+  "tuesdayMinutesBefore": 180,
+  "tuesdayMinutesAfter": 90,
+  "fridayMinutes": 0,
+  "httpRequests": 705,
+  "httpFailures": 0,
+  "httpP95Ms": 118,
+  "httpMaxMs": 836,
+  "finalPlan": {
+    "program": "CS",
+    "year": 4,
+    "courseCount": 3,
+    "courses": [
+      "COMP 1405",
+      "MATH 1007",
+      "ERTH 1006"
+    ],
+    "keepCourses": [
+      "ERTH 1006"
+    ],
+    "daysOff": [
+      "Fri"
+    ],
+    "preferredDaysOff": [],
+    "lightDays": [
+      "Tue"
+    ],
+    "avoidInstructors": [
+      "X"
+    ],
+    "excludeInstructors": [],
+    "earliest": "",
+    "latest": "",
+    "preferAfter": "",
+    "preferBefore": "",
+    "electiveQuery": "geology"
+  }
+}

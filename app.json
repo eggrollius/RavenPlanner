@@ -14,6 +14,16 @@
     "heroku-postgresql:essential-0"
   ],
   "env": {
+    "NODE_LLAMA_CPP_GPU": { "value": "false" },
+    "NODE_LLAMA_CPP_SKIP_DOWNLOAD": { "value": "true" },
+    "RAVEN_ADVISOR_DOWNLOAD_ON_BUILD": {
+      "description": "Download the pinned GGUF model into the slug at build time. No model downloads occur in clients or on inference requests.",
+      "value": "true"
+    },
+    "RAVEN_ADVISOR_MODEL_PATH": { "value": ".local/models/smol.gguf" },
+    "RAVEN_ADVISOR_THREADS": { "value": "1" },
+    "RAVEN_ADVISOR_QUEUE_SIZE": { "value": "4" },
+    "RAVEN_ADVISOR_TIMEOUT_MS": { "value": "180000" },
     "NODE_ENV": {
       "value": "production"
     },
