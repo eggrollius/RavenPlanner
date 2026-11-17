@@ -78,7 +78,7 @@ academic claims in partial text. There is no simulated typing, fixed delay, or
 character-by-character replay of an already completed response.
 
 The client shows text immediately as deltas arrive. Only `done` commits the
-message, preferences and calendar. Stop, navigation, disconnection and errors
+assistant's reply, preferences and calendar. Stop, navigation, disconnection and errors
 discard partial output and retain the last completed proposal. A saved proposal
 is rechecked against the catalog on reload without needing inference.
 

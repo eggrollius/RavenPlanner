@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AdvisorPanel } from './AdvisorPanel';
 import { advisorStatus, streamTurn } from '../advisor/model';
+import { createTools } from '../advisor/tools';
 import { applyPatch, emptyPlan } from '../advisor/schema';
 import { solvePlan } from '../advisor/solver';
 import type { AdvisorTools } from '../advisor/tools';
@@ -13,10 +14,10 @@ import type { Course } from '../types';
 vi.mock('../advisor/model', () => ({ advisorStatus: vi.fn(), streamTurn: vi.fn() }));
 const course: Course = { term: 'FALL', year: 2026, id: 1, crn: '12345', course_code: 'ERTH 1006', section: 'A', course_name: 'Earth Science (Demo)', type: 'Lecture', instructor: 'Demo instructor', credits: 0.5, registration_status: 'Open', also_register_in: '', meeting_infos: [{ days: 'Wed', time: '12:00 - 13:00', meeting_date: 'Sep 08, 2026 to Dec 08, 2026', building: '', room: '' }] };
 const selected = { code: 'ERTH 1006', sections: { A: { parent: course, children: [] } }, disabled: new Set<string>() };
-vi.mock('../advisor/tools', () => ({ createTools: () => ({
+vi.mock('../advisor/tools', () => ({ createTools: vi.fn(() => ({
   search: vi.fn(async () => []), sections: vi.fn(async () => selected),
   solve: vi.fn(async (...args: Parameters<AdvisorTools['solve']>) => solvePlan(args[0], args[1], args[2])),
-}) }));
+})) }));
 beforeEach(() => vi.mocked(advisorStatus).mockResolvedValue({ configured: true, phase: 'ready', active: 0, queued: 0, maxQueued: 4 }));
 afterEach(() => { cleanup(); localStorage.clear(); vi.resetAllMocks(); });
 
@@ -73,6 +74,22 @@ it('cancels a streaming reply without saving partial text or changing requiremen
   const saved = JSON.parse(localStorage.getItem('raven-advisor-v1:FALL:2026')!);
   expect(saved.plan).toEqual(emptyPlan());
   expect(saved.messages.some((message: { role: string }) => message.role === 'assistant')).toBe(false);
+});
+
+it('releases the chat controls when a saved-proposal recheck is stopped', async () => {
+  const plan = applyPatch(emptyPlan(), { addCourses: ['ERTH 1006'], courseCount: 1 });
+  localStorage.setItem('raven-advisor-v1:FALL:2026', JSON.stringify({ version: 1, plan, messages: [], previousCRNs: ['12345'] }));
+  const sections = vi.fn<AdvisorTools['sections']>((_code, signal) => new Promise((_resolve, reject) => {
+    signal.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')), { once: true });
+  }));
+  vi.mocked(createTools).mockReturnValueOnce({ search: vi.fn(), sections, solve: vi.fn() });
+  const user = userEvent.setup();
+  render(<AdvisorPanel catalog={{ term: 'FALL', year: 2026 }} />);
+  await user.click(await screen.findByRole('button', { name: 'Stop' }));
+  await user.type(screen.getByLabelText('Message the advisor'), 'Fridays off.');
+  expect(screen.getByRole('button', { name: 'Send message' })).toBeEnabled();
+  expect(sections.mock.calls[0][1].aborted).toBe(true);
+  expect(JSON.parse(localStorage.getItem('raven-advisor-v1:FALL:2026')!).plan.courses).toEqual(['ERTH 1006']);
 });
 
 it('reports server unavailability and can reconnect', async () => {

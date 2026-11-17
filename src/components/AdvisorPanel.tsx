@@ -99,7 +99,7 @@ export function AdvisorPanel({ catalog }: { catalog: Catalog }) {
     }
   };
 
-  const stop = () => { operation.current?.abort(); setStreaming(''); setStatus('Stopping advisor…'); };
+  const stop = () => { operation.current?.abort(); setStreaming(''); setStatus(''); };
   const reset = () => { operation.current?.abort(); setStatus(''); setStreaming(''); persist(freshSession()); setSchedules([]); setTrace([]); setCurrent(false); setError(''); };
   const plan = session.plan;
   const requirements = [
