@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const base = `http://127.0.0.1:${process.env.PORT || 5000}`;
 async function api(path, method = 'GET', body) {
@@ -15,6 +16,18 @@ assert.deepEqual(await api('/health'), { status: 'ok' });
 const page = await fetch(base);
 assert.equal(page.status, 200);
 assert.match(await page.text(), /<title>Raven Planner<\/title>/);
+const features = (await api('/catalog')).features;
+assert.equal(typeof features.aiAdvisor, 'boolean');
+if (features.aiAdvisor) {
+  let advisor = await api('/advisor/status');
+  assert.equal(typeof advisor.configured, 'boolean');
+  if (advisor.configured) {
+    for (let attempt = 0; attempt < 40 && advisor.phase === 'loading'; attempt++) { await delay(500); advisor = await api('/advisor/status'); }
+    assert.equal(advisor.phase, 'ready', 'The production inference worker must load the mounted model.');
+  }
+} else {
+  assert.equal((await fetch(`${base}/api/advisor/status`)).status, 404, 'Disabled AI endpoints must not be exposed.');
+}
 
 const fall = 'term=FALL&year=2026';
 const winter = 'term=WINTER&year=2027';

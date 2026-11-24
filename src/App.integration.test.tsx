@@ -37,6 +37,29 @@ afterEach(() => {
 });
 
 describe('course planning flow', () => {
+  it.each([undefined, { aiAdvisor: false }, { aiAdvisor: 'true' }])('keeps the AI entry point hidden without an enabled server capability (%j)', async (features) => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ ...catalogResponse, features })));
+    render(<App />);
+    await screen.findByText('Fall 2026');
+    expect(screen.queryByRole('navigation', { name: 'Planning mode' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'AI advisor' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Department')).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the preview AI workspace when the server enables it', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => new Response(JSON.stringify(url === '/api/catalog'
+      ? { ...catalogResponse, features: { aiAdvisor: true } }
+      : { configured: false, phase: 'idle', active: 0, queued: 0, maxQueued: 4 })));
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'AI advisor' }));
+    expect(await screen.findByLabelText('AI academic advisor')).toBeVisible();
+    expect(screen.getByLabelText('Department')).not.toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Manual planner' }));
+    expect(screen.getByLabelText('Department')).toBeVisible();
+  });
+
   it('starts courses collapsed, adds the newest first, and retains section choices after collapsing', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       if (url === '/api/catalog') return new Response(JSON.stringify(catalogResponse));

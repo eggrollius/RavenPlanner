@@ -62,6 +62,8 @@ export function developmentCatalog(catalog: Catalog): CourseInput[] {
   add('BUSI 1001', 'Financial Accounting for Business Students', 'A', 'Wed', '18:00 - 21:00');
   add('STAT 2507', 'Introduction to Statistical Modeling I', 'A', 'Mon Wed', '16:00 - 17:30');
   add('CGSC 1001', 'Mysteries of the Mind', 'A', '', 'TBA');
+  add('ERTH 1006', 'Earth Science Elective (Demo)', 'A', 'Tue', '13:00 - 16:00');
+  add('ERTH 1006', 'Earth Science Elective (Demo)', 'B', 'Wed', '12:00 - 13:30');
   return courses;
 }
 

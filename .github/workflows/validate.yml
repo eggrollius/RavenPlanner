@@ -42,6 +42,9 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - run: npm run test:e2e -- e2e/advisor.spec.ts
+        env:
+          RAVEN_ADVISOR_ENABLED: 'true'
 
   containers:
     needs: validate

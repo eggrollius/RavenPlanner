@@ -25,8 +25,8 @@ socket adapter; use a full PostgreSQL server when testing database concurrency o
 deployment behavior. The local database is only reachable from this computer.
 
 Try adding **COMP 1405**, **MATH 1007**, and **PSYC 1001** together. Each of the
-three demo catalogs (fall, summer, and winter in the selected year) has 34 sections
-across these ten courses:
+three demo catalogs (fall, summer, and winter in the selected year) has 36 sections
+across these eleven courses:
 
 | Course | Sample data |
 | --- | --- |
@@ -36,10 +36,35 @@ across these ten courses:
 | PSYC 1001, ECON 1001 | Two lecture choices |
 | BUSI 1001, STAT 2507 | Evening and late-afternoon lectures |
 | CGSC 1001 | Online Unscheduled course with no fixed meeting time |
+| ERTH 1006 | Synthetic geology elective with Tuesday and Wednesday alternatives |
 
 The names, instructors, CRNs, dates, and times are development examples, not a
 live Carleton catalog. They include overlapping times and early/evening sections
 so you can test section selection, schedule pagination, and time preferences.
+
+## Server-hosted AI advisor
+
+AI is **off by default in production**. Heroku review/preview apps enable it
+automatically. To try it locally, run `npm run model:download` once, then set
+`RAVEN_ADVISOR_ENABLED=true` in `.env.local` or your shell before starting `dev`.
+When disabled, the AI navigation and endpoints are absent and no model is loaded.
+
+When enabled, switch between **Manual planner** and **AI advisor** using the navigation above
+the planner. A small GGUF model stays loaded in a dedicated server process,
+and WebSockets deliver replies as tokens are generated. One inference runs at a
+time behind a bounded FIFO queue, leaving the HTTP server free to serve normal
+requests. Clients do not download weights or run inference. No paid LLM API is
+needed.
+
+Conversation and planning state remain in the browser per term; messages and
+planning context are sent to the server for each turn. Start with eligible
+course codes and preferences, then ask for changes such as “Make Tuesdays
+lighter, but keep my geology elective.”
+
+The advisor checks actual section data, time conflicts and linked tutorials.
+The catalog has no prerequisite or degree-audit information: the advisor asks
+for eligible courses and never infers graduation requirements from your year.
+See [setup, architecture, model benchmarks and verification](docs/local-advisor.md).
 Search uses an exact department and course number; other course codes return the
 normal “No course found” error.
 
@@ -145,7 +170,10 @@ The command always removes its containers and test volume when it finishes. CI r
 The app uses the Heroku Chrome for Testing and Node.js buildpacks on `heroku-24`.
 `Procfile` starts the Express server with `npm start` and the catalog worker with
 `npm run worker`. `heroku-postbuild` compiles the server, worker, and client before
-Heroku prunes development dependencies. Both processes run compiled JavaScript;
+Heroku prunes development dependencies. `heroku-cleanup` then removes unused GPU
+binaries and, for AI-enabled preview apps, provisions the model. Cleaning after
+dependency pruning keeps npm from restoring the large optional GPU packages into
+the slug. Both processes run compiled JavaScript;
 Python and `tsx` are not needed at runtime. Node 22 is pinned in `package.json`.
 The Heroku release process automatically runs `npm run migrate` before new web
 and worker dynos start. Server startup also runs the same idempotent migration for

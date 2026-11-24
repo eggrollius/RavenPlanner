@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseCatalog, readCatalog, type Catalog } from './catalog.js';
 import { transaction } from './transaction.js';
+import { readFeatures } from './features.js';
 import type { CourseInput, MeetingInput, Queryable } from './types.js';
 
 const courseColumns = ['registration_status', 'crn', 'course_code', 'section', 'course_name', 'credits', 'type', 'section_type', 'instructor', 'also_register_in', 'term', 'year'] as const;
@@ -29,7 +30,7 @@ async function meetingsFor(db: Queryable, ids: number[]) {
   return grouped;
 }
 
-export function createApp(db: Queryable, activeTerm = readCatalog().term, activeYear = readCatalog().year) {
+export function createApp(db: Queryable, activeTerm = readCatalog().term, activeYear = readCatalog().year, features = readFeatures()) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
@@ -42,7 +43,7 @@ export function createApp(db: Queryable, activeTerm = readCatalog().term, active
         const catalog = parseCatalog(row.term, row.year);
         catalogs.set(`${catalog.term}-${catalog.year}`, catalog);
       }
-      res.json({ term: activeTerm, year: activeYear, catalogs: [...catalogs.values()] });
+      res.json({ term: activeTerm, year: activeYear, catalogs: [...catalogs.values()], features });
     } catch (error) { next(error); }
   });
 

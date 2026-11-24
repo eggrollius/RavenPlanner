@@ -18,6 +18,13 @@ services:
       DATABASE_URL: postgresql://raven:${POSTGRES_PASSWORD:-raven}@db:5432/ravenplanner
       ACTIVE_TERM: ${ACTIVE_TERM:-FALL}
       ACTIVE_YEAR: ${ACTIVE_YEAR:-2026}
+      RAVEN_ADVISOR_ENABLED: ${RAVEN_ADVISOR_ENABLED:-false}
+      RAVEN_ADVISOR_MODEL_PATH: /models/${RAVEN_ADVISOR_MODEL_FILE:-smol.gguf}
+      RAVEN_ADVISOR_THREADS: ${RAVEN_ADVISOR_THREADS:-1}
+      RAVEN_ADVISOR_QUEUE_SIZE: ${RAVEN_ADVISOR_QUEUE_SIZE:-4}
+      RAVEN_ADVISOR_TIMEOUT_MS: ${RAVEN_ADVISOR_TIMEOUT_MS:-180000}
+    volumes:
+      - ${RAVEN_ADVISOR_MODEL_DIR:-./.local/models}:/models:ro
     ports:
       - "${PORT:-5000}:5000"
     depends_on:
