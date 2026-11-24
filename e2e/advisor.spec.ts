@@ -3,7 +3,27 @@ import { WebSocket as NodeSocket } from 'ws';
 import { emptyPlan } from '../src/advisor/schema';
 import type { AdvisorEvent } from '../src/advisor/contracts';
 
+const enabled = process.env.RAVEN_ADVISOR_ENABLED === 'true' || Boolean(process.env.RAVEN_AI_E2E);
+
+test('keeps production on the manual planner when AI is disabled', async ({ page, request }) => {
+  test.skip(enabled, 'Run without RAVEN_ADVISOR_ENABLED to verify the production default.');
+  const advisorRequests: string[] = [];
+  page.on('request', (req) => { if (/advisor/i.test(req.url())) advisorRequests.push(req.url()); });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Academic term: Fall 2026' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Planning mode' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'AI advisor' })).toHaveCount(0);
+  await page.getByLabel('Department').fill('COMP');
+  await page.getByLabel('Course number').fill('1405');
+  await page.getByRole('button', { name: 'Add course' }).click();
+  await expect(page.getByRole('button', { name: 'Remove COMP 1405' })).toBeVisible();
+  expect(advisorRequests).toEqual([]);
+  await expect((await request.get('/api/catalog')).json().then((value) => value.features.aiAdvisor)).resolves.toBe(false);
+  expect((await request.get('/api/advisor/status')).status()).toBe(404);
+});
+
 test('keeps AI and manual workspaces separate and scopes chat state by term', async ({ page }) => {
+  test.skip(!enabled, 'AI is enabled explicitly in preview deployments.');
   await page.goto('/');
   await page.getByLabel('Department').fill('COMP');
   await page.getByLabel('Course number').fill('1405');

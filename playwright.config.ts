@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: {
     command: 'tsx scripts/dev.ts --ephemeral',
     url: 'http://127.0.0.1:5174/api/health',
-    env: { PORT: '5001', VITE_PORT: '5174', ACTIVE_TERM: 'FALL', ACTIVE_YEAR: '2026' },
+    env: { PORT: '5001', VITE_PORT: '5174', ACTIVE_TERM: 'FALL', ACTIVE_YEAR: '2026', RAVEN_ADVISOR_ENABLED: process.env.RAVEN_AI_E2E ? 'true' : process.env.RAVEN_ADVISOR_ENABLED === 'true' ? 'true' : 'false' },
     reuseExistingServer: false,
     timeout: 60000,
     gracefulShutdown: { signal: 'SIGTERM', timeout: 10000 },

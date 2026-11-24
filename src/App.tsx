@@ -12,6 +12,7 @@ const AdvisorPanel = lazy(() => import('./components/AdvisorPanel').then((module
 const defaults: Preferences = { beforeEnabled: false, before: '09:00', afterEnabled: false, after: '18:00', prioritizeDaysOff: true };
 export default function App() {
   const [mode, setMode] = useState<'manual' | 'ai'>('manual');
+  const [advisorEnabled, setAdvisorEnabled] = useState(false);
   const [catalog, setCatalog] = useState<Catalog>();
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [plans, setPlans] = useState<Record<string, SelectedCourse[]>>({});
@@ -25,6 +26,7 @@ export default function App() {
     getCatalog(controller.signal).then((response) => {
       if (controller.signal.aborted) return;
       setCatalogs(response.catalogs);
+      setAdvisorEnabled(response.features?.aiAdvisor === true);
       setCatalog({ term: response.term, year: response.year });
       setError('');
     }).catch((reason: unknown) => {
@@ -70,10 +72,9 @@ export default function App() {
   return <>
     <Header catalog={catalog} catalogs={catalogs} onChange={changeCatalog} />
     <main>
-      <nav className="mode-nav" aria-label="Planning mode"><button type="button" aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual planner</button><button type="button" aria-pressed={mode === 'ai'} onClick={() => setMode('ai')}>AI advisor</button></nav>
-      {mode === 'ai' && !catalog && <section className="panel">{error ? <div role="alert">{error} <button type="button" onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Retry catalog</button></div> : <p role="status">Loading course catalog…</p>}</section>}
-      {mode === 'ai' && catalog && <Suspense fallback={<div className="panel" role="status">Opening local advisor…</div>}><AdvisorPanel key={`advisor-${key}`} catalog={catalog} /></Suspense>}
-      <div hidden={mode !== 'manual'}>
+      {advisorEnabled && <nav className="mode-nav" aria-label="Planning mode"><button type="button" aria-pressed={mode === 'manual'} onClick={() => setMode('manual')}>Manual planner</button><button type="button" aria-pressed={mode === 'ai'} onClick={() => setMode('ai')}>AI advisor</button></nav>}
+      {advisorEnabled && mode === 'ai' && catalog && <Suspense fallback={<div className="panel" role="status">Opening advisor…</div>}><AdvisorPanel key={`advisor-${key}`} catalog={catalog} /></Suspense>}
+      <div hidden={advisorEnabled && mode !== 'manual'}>
       <CourseSearch onAdd={add} busy={busy} disabled={!catalog} />
       {error && <div className="alert" role="alert">
         {error}

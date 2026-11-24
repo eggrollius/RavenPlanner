@@ -5,8 +5,22 @@
 ```bash
 npm ci
 npm run model:download
-npm run dev
+RAVEN_ADVISOR_ENABLED=true npm run dev
 ```
+
+AI is disabled by default, including on existing production apps. Set
+`RAVEN_ADVISOR_ENABLED=true` in your shell or `.env.local` to enable it locally.
+The same server-side flag controls both the UI and inference: when off, the mode
+navigation is hidden, AI endpoints return 404, and no inference service or model
+is started. The client reads the capability in the existing catalog response;
+there is no separate client build flag or extra discovery request.
+
+Heroku review/preview apps enable AI and model provisioning automatically through
+`app.json`'s `environments.review.env`. Existing automatic review apps are also
+recognized by Heroku's server-side `HEROKU_PR_NUMBER` when the new flag is unset,
+so rebuilding an existing PR preview enables it too. Explicit `false` overrides
+the preview default. Production defaults remain off. No app-name or URL matching
+is used. See [Heroku's review-app configuration](https://devcenter.heroku.com/articles/github-integration-review-apps).
 
 Open the printed URL and choose **AI advisor**. The server loads the pinned
 SmolLM2 360M Q4_K_M GGUF (~271 MB) from `.local/models/smol.gguf` in the background
@@ -18,7 +32,8 @@ Allow at least 1 GB RAM for the application and model, plus the database.
 The download command caches the model, verifies its size, and installs it by an
 atomic rename. It does not overwrite an existing model. Models are not downloaded
 on user requests. With no model installed, manual planning and catalog/health
-requests remain available; AI mode explains that the server is not configured.
+requests remain available; when AI is enabled, AI mode explains that the server
+is not configured.
 
 Try this conversation against the explicitly synthetic development catalog:
 
@@ -98,11 +113,12 @@ without waiting for inference. Normal HTTP requests never enter the model queue.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
+| `RAVEN_ADVISOR_ENABLED` | off in production, on in PR previews | Enable AI UI, endpoints and inference; explicit `true`/`false` overrides the environment default |
 | `RAVEN_ADVISOR_MODEL_PATH` | `.local/models/smol.gguf` | Server GGUF path; operators can provision another compatible model |
 | `RAVEN_ADVISOR_THREADS` | at most 2, leaving one available core | Native inference CPU threads; range 1–16 |
 | `RAVEN_ADVISOR_QUEUE_SIZE` | `4` | Waiting requests in addition to one active turn; range 0–32 |
 | `RAVEN_ADVISOR_TIMEOUT_MS` | `180000` | Queue + processing deadline; range 1–600 seconds |
-| `RAVEN_ADVISOR_DOWNLOAD_ON_BUILD` | unset | Heroku-only opt-in to downloading the pinned model during postbuild |
+| `RAVEN_ADVISOR_DOWNLOAD_ON_BUILD` | off in production, on in PR previews | Provision the pinned model during Heroku cleanup when AI is enabled |
 
 The example `.env` sets one inference thread. Keep CPU capacity for HTTP and the
 database when increasing it. Model changes require restarting the server process;
@@ -112,15 +128,27 @@ Docker uses Debian/glibc with the native runtime's OpenMP dependency. Compose
 retains two services, `server` and `db`, and mounts `.local/models` read-only at
 `/models`. Download on the host before `docker compose up --build`; alternatively
 set `RAVEN_ADVISOR_MODEL_DIR` and `RAVEN_ADVISOR_MODEL_FILE` for the mount. Missing
-weights do not prevent the container health check from succeeding.
+weights do not prevent the container health check from succeeding. Compose also
+defaults AI off; set `RAVEN_ADVISOR_ENABLED=true` to opt in.
 
-For Heroku, set `NODE_LLAMA_CPP_GPU=false`, `NODE_LLAMA_CPP_SKIP_DOWNLOAD=true`,
+To opt a Heroku app into AI, set `RAVEN_ADVISOR_ENABLED=true`,
+`NODE_LLAMA_CPP_GPU=false`, `NODE_LLAMA_CPP_SKIP_DOWNLOAD=true`,
 `RAVEN_ADVISOR_DOWNLOAD_ON_BUILD=true`,
 `RAVEN_ADVISOR_MODEL_PATH=.local/models/smol.gguf` and the desired thread/queue
-limits, then create a new build. Postbuild prunes unused optional CUDA/Vulkan
-packages and bundles the model in the slug, so dynos do not download it at
-runtime. `app.json` provides defaults for new apps; existing apps need their
-config vars set explicitly. The process uses the usual `web: npm start` Procfile.
+limits, then create a new build. `heroku-postbuild` compiles the application.
+`heroku-cleanup` removes unused optional CUDA/Vulkan packages after Heroku prunes
+dependencies, then provisions the model only when both AI and build-time download
+are enabled. Cleaning in postbuild is too early: npm pruning restores the optional
+GPU packages and can push the slug over its size limit. This hook order follows
+[Heroku's Node build lifecycle](https://devcenter.heroku.com/articles/nodejs-classic-buildpack-builds#customize-the-build-process).
+The CPU runtime, Chrome and Chromedriver are retained for inference and catalog
+scraping. Dynos do not download models at runtime. `app.json` provides defaults
+for new apps and review overrides; production apps need an explicit opt-in.
+The process uses the usual `web: npm start` Procfile.
+The local reproduction restored all three GPU packages during npm pruning;
+cleanup reduced the compressed native packages from 400,163,817 to 23,783,127
+bytes, and the CPU runtime loaded successfully afterwards. This measures package
+savings, not the complete Heroku slug; see [the recorded check](verification/advisor-rollout.json).
 Reverse proxies must forward WebSocket upgrades and preserve the original Host
 header. No additional public inference port is exposed.
 
@@ -129,6 +157,8 @@ header. No additional public inference port is exposed.
 ```bash
 npm run validate
 npm run test:e2e
+# Verify AI is visible in the explicitly enabled preview configuration:
+RAVEN_ADVISOR_ENABLED=true npm run test:e2e -- e2e/advisor.spec.ts
 # With the server model installed, run real native inference in the browser flow:
 RAVEN_AI_E2E=1 npm run test:e2e
 # Against an already-running development stack:
@@ -139,7 +169,9 @@ Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/path/to/chromium` for a system browser
 Fast tests cover bounded FIFO admission, HTTP responsiveness during child CPU
 work, queued/disconnected cancellation, active/queued deadlines, crashes,
 recovery, invalid requests, origins, missing models, shutdown, partial-text UI
-rendering and preservation of completed state. They do not download model weights.
+rendering and preservation of completed state. They also check production-off and
+preview-on discovery, HTTP/WebSocket gating, and final slug cleanup. They do not
+download model weights. CI runs browser checks with AI both disabled and enabled.
 The opt-in browser test uses real server CPU inference, verifies text arrives
 before completion, exercises another queued client, checks normal HTTP traffic
 during inference, and confirms the browser never requests GGUF/WASM assets.

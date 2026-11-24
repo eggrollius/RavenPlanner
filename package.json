@@ -23,7 +23,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.dev.json",
     "validate": "npm run lint && npm run typecheck && npm test && npm run build",
-    "heroku-postbuild": "npm run build && node scripts/prepare-advisor.mjs"
+    "heroku-postbuild": "npm run build",
+    "heroku-cleanup": "node scripts/prepare-advisor.mjs"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

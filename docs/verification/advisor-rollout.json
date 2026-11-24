@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-24",
+  "node": "24.19.0",
+  "npm": "11.9.0",
+  "npmPruneRestoredGpuPackages": 3,
+  "nativePackagesTarGzipBytesBeforeCleanup": 400163817,
+  "nativePackagesTarGzipBytesAfterCleanup": 23783127,
+  "nativeCpuLoadAfterProductionPruneAndCleanup": true,
+  "note": "Local dependency cleanup measurement, not a full Heroku slug build. The preview model and Chrome worker are retained."
+}

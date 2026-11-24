@@ -55,7 +55,7 @@ describe('scraped course publishing', () => {
     const address = server.address();
     if (!address || typeof address === 'string') throw new Error('Missing test server port');
     const api = new RavenApiClient(`http://127.0.0.1:${address.port}/api`, fetch, vi.fn());
-    expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toEqual({ term, year, catalogs: [{ term, year }] });
+    expect(await (await fetch(`http://127.0.0.1:${address.port}/api/catalog`)).json()).toMatchObject({ term, year, catalogs: [{ term, year }] });
     const course = { crn: '12345', course_name: 'Intro', course_code: 'COMP 1405', section: 'A', credits: 0.5, section_type: 'Online Scheduled Section', meeting_infos: { days: 'Mon', time: '10:00 - 11:00', room: '1' } };
     const log = vi.fn();
     expect(await publishCourses([course], api, log)).toEqual({ successfulUpdates: 0, successfulAdditions: 1, failedOperations: 0 });

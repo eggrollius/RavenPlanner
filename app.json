@@ -14,16 +14,32 @@
     "heroku-postgresql:essential-0"
   ],
   "env": {
-    "NODE_LLAMA_CPP_GPU": { "value": "false" },
-    "NODE_LLAMA_CPP_SKIP_DOWNLOAD": { "value": "true" },
-    "RAVEN_ADVISOR_DOWNLOAD_ON_BUILD": {
-      "description": "Download the pinned GGUF model into the slug at build time. No model downloads occur in clients or on inference requests.",
+    "RAVEN_ADVISOR_ENABLED": {
+      "description": "Enable the AI advisor UI and inference endpoints. Production defaults off; review apps override this to true.",
+      "value": "false"
+    },
+    "NODE_LLAMA_CPP_GPU": {
+      "value": "false"
+    },
+    "NODE_LLAMA_CPP_SKIP_DOWNLOAD": {
       "value": "true"
     },
-    "RAVEN_ADVISOR_MODEL_PATH": { "value": ".local/models/smol.gguf" },
-    "RAVEN_ADVISOR_THREADS": { "value": "1" },
-    "RAVEN_ADVISOR_QUEUE_SIZE": { "value": "4" },
-    "RAVEN_ADVISOR_TIMEOUT_MS": { "value": "180000" },
+    "RAVEN_ADVISOR_DOWNLOAD_ON_BUILD": {
+      "description": "Download the pinned GGUF model into the slug at build time. No model downloads occur in clients or on inference requests.",
+      "value": "false"
+    },
+    "RAVEN_ADVISOR_MODEL_PATH": {
+      "value": ".local/models/smol.gguf"
+    },
+    "RAVEN_ADVISOR_THREADS": {
+      "value": "1"
+    },
+    "RAVEN_ADVISOR_QUEUE_SIZE": {
+      "value": "4"
+    },
+    "RAVEN_ADVISOR_TIMEOUT_MS": {
+      "value": "180000"
+    },
     "NODE_ENV": {
       "value": "production"
     },
@@ -46,6 +62,26 @@
     "RAVEN_BROWSER_WAIT_MS": {
       "description": "Browser element wait timeout in milliseconds (1-300000).",
       "value": "30000"
+    }
+  },
+  "environments": {
+    "review": {
+      "env": {
+        "RAVEN_ADVISOR_ENABLED": "true",
+        "NODE_LLAMA_CPP_GPU": "false",
+        "NODE_LLAMA_CPP_SKIP_DOWNLOAD": "true",
+        "RAVEN_ADVISOR_DOWNLOAD_ON_BUILD": "true",
+        "RAVEN_ADVISOR_MODEL_PATH": ".local/models/smol.gguf",
+        "RAVEN_ADVISOR_THREADS": "1",
+        "RAVEN_ADVISOR_QUEUE_SIZE": "4",
+        "RAVEN_ADVISOR_TIMEOUT_MS": "180000",
+        "NODE_ENV": "production",
+        "ACTIVE_TERM": "FALL",
+        "ACTIVE_YEAR": "2026",
+        "RAVEN_API_URL": "https://www.ravenplanner.ca/api",
+        "RAVEN_SCRAPE_INTERVAL_SECONDS": "86400",
+        "RAVEN_BROWSER_WAIT_MS": "30000"
+      }
     }
   }
 }
